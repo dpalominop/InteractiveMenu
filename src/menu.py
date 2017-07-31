@@ -49,8 +49,10 @@ class Menu:
         cur = conn.cursor()
 
         cur.execute("""SELECT name, ip, port FROM network_elements WHERE id IN (
-                        SELECT network_element_id FROM area_network_elements WHERE area_id=(
-                            SELECT area_id FROM employees WHERE username='%s'
+                        SELECT network_element_id FROM command_lists WHERE id IN (
+                            SELECT command_list_id FROM command_list_employees WHERE employee_id=(
+                                SELECT id FROM employees WHERE username='%s'
+                            )
                         )
                     )
                     """%(self.username))
