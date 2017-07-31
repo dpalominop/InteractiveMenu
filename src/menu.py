@@ -31,23 +31,9 @@ class Menu:
             'password':'password',
         }
 
-        # =======================
-        #    MENUS DEFINITIONS
-        # =======================
-
-        # Menu definition
-        self.menu_actions = {
-            'main_menu': self.main_menu,
-            # '1': menu1,
-            # '2': menu2,
-            # '3': menu3,
-            '*': self.back,
-            '0': self.exit,
-        }
-
-        self.options = []
-
-
+    # =======================
+    #     DATABASE FUNCTIONS
+    # =======================
 
     def DBGetNetworkElements(self):
         try:
@@ -69,7 +55,7 @@ class Menu:
                     )
                     """%(self.username))
 
-        self.options = [(row[0],row[1],row[2]) for row in cur.fetchall()]
+        self.network_elements = [(row[0],row[1],row[2] or 22) for row in cur.fetchall()]
         cur.close()
 
         return
@@ -83,17 +69,15 @@ class Menu:
         self.DBGetNetworkElements()
 
         os.system('clear')
-        print "Welcome,\n"
-        print "Please choose the menu you want to start:"
-        # print "1. Menu 1"
-        # print "2. Menu 2"
-        # print "3. Menu 3"
+        text =  ["Welcome,\n"]
+        text.append("Please choose the menu you want to start:")
+        for i in range(len(self.network_elements)) :
+            text.append("%s. %s"%(i+1, self.network_elements[i][0]))
+        text.append("\n0. Quit")
 
-        for i in range(len(self.options)) :
-            print ("%s. %s"%(i+1, self.options[i][0]))
+        print '\n'.join(text)
+        choice = raw_input(">>  ")
 
-        print "\n0. Quit"
-        choice = raw_input(" >>  ")
         self.exec_menu(choice)
 
         return
@@ -103,43 +87,48 @@ class Menu:
         os.system('clear')
         ch = choice.lower()
         if ch == '':
-            self.menu_actions['main_menu']()
+            self.main_menu()
         else:
             try:
-                self.menu_actions[ch]()
+                if ch == '0':
+                    self.exit()
+                elif ch == '*':
+                    self.back()
+                else:
+                    self.menu_n(self.network_elements[int(choice)-1][1], self.network_elements[int(choice)-1][2])
             except KeyError:
                 print "Invalid selection, please try again.\n"
-                self.menu_actions['main_menu']()
+                self.main_menu()
         return
 
-    # Menu 1
-    def menu1(self):
-        print "Hello Menu 1 !\n"
-        print "*. Back"
-        print "0. Quit"
-        choice = raw_input(" >>  ")
-        self.exec_menu(choice)
-        return
+    # # Menu 1
+    # def menu1(self):
+    #     print "Hello Menu 1 !\n"
+    #     print "*. Back"
+    #     print "0. Quit"
+    #     choice = raw_input(" >>  ")
+    #     self.exec_menu(choice)
+    #     return
+    #
+    #
+    # # Menu 2
+    # def menu2(self):
+    #     print "Hello Menu 2 !\n"
+    #     print "*. Back"
+    #     print "0. Quit"
+    #     choice = raw_input(" >>  ")
+    #     self.exec_menu(choice)
+    #     return
 
-
-    # Menu 2
-    def menu2(self):
-        print "Hello Menu 2 !\n"
-        print "*. Back"
-        print "0. Quit"
-        choice = raw_input(" >>  ")
-        self.exec_menu(choice)
-        return
-
-    def menu3():
-        os.system("lssh 10.118.181.126")
+    def menu_n(self, ip, port):
+        os.system("lssh %s:%i"%(ip, port))
 
         self.main_menu()
         return
 
     # Back to main menu
     def back(self):
-        self.menu_actions['main_menu']()
+        self.main_menu()
 
     # Exit program
     def exit(self):
