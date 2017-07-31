@@ -15,116 +15,135 @@
 import sys, os, getpass
 import psycopg2
 
-# Acceso de Base de Datos
-dbname = 'sa_dev'
-host = 'localhost'
-user = 'sa'
-password = 'password'
+class Menu:
+    """
+        Creación dinámica de Menu basado en Base de Datos
+    """
 
-def DBGetNetworkElements(username):
-    try:
-        conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(dbname, user, host, password))
-    except:
-        sys.stderr.write("ERR: Unable to connect to the database\n")
-        sys.exit(0)
+    def __init__(self, username):
+        self.username = username
 
-    cur = conn.cursor()
+        # Acceso de Base de Datos
+        self.dbCredential = {
+            'dbname':'sa_dev',
+            'host' :'localhost',
+            'user' :'sa',
+            'password':'password',
+        }
 
-    cur.execute("""SELECT name, ip, port FROM network_elements WHERE id IN (
-                    SELECT network_element_id FROM area_network_elements WHERE area_id=(
-                        SELECT area_id FROM employees WHERE username='%s'
-                    )
-                )
-                """%(username))
+        # =======================
+        #    MENUS DEFINITIONS
+        # =======================
 
-    options = [(row[0],row[1],row[2]) for row in cur.fetchall()]
-    cur.close()
+        # Menu definition
+        self.menu_actions = {
+            'main_menu': self.main_menu,
+            # '1': menu1,
+            # '2': menu2,
+            # '3': menu3,
+            '*': self.back,
+            '0': self.exit,
+        }
 
-    return options
+        self.options = []
 
 
-# Main definition - constants
-menu_actions  = {}
 
-# =======================
-#     MENUS FUNCTIONS
-# =======================
-
-# Main menu
-def main_menu():
-    os.system('clear')
-
-    print "Welcome,\n"
-    print "Please choose the menu you want to start:"
-    print "1. Menu 1"
-    print "2. Menu 2"
-    print "3. Menu 3"
-    print "\n0. Quit"
-    choice = raw_input(" >>  ")
-    exec_menu(choice)
-
-    return
-
-# Execute menu
-def exec_menu(choice):
-    os.system('clear')
-    ch = choice.lower()
-    if ch == '':
-        menu_actions['main_menu']()
-    else:
+    def DBGetNetworkElements(self):
         try:
-            menu_actions[ch]()
-        except KeyError:
-            print "Invalid selection, please try again.\n"
-            menu_actions['main_menu']()
-    return
+            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.dbCredential['dbname'],
+                                                                             self.dbCredential['user'],
+                                                                             self.dbCredential['host'],
+                                                                             self.dbCredential['password'])
+                                    )
+        except:
+            sys.stderr.write("ERR: Unable to connect to the database\n")
+            sys.exit(0)
 
-# Menu 1
-def menu1():
-    print "Hello Menu 1 !\n"
-    print "9. Back"
-    print "0. Quit"
-    choice = raw_input(" >>  ")
-    exec_menu(choice)
-    return
+        cur = conn.cursor()
+
+        cur.execute("""SELECT name, ip, port FROM network_elements WHERE id IN (
+                        SELECT network_element_id FROM area_network_elements WHERE area_id=(
+                            SELECT area_id FROM employees WHERE username='%s'
+                        )
+                    )
+                    """%(self.username))
+
+        self.options = [(row[0],row[1],row[2]) for row in cur.fetchall()]
+        cur.close()
+
+        return
+
+    # =======================
+    #     MENUS FUNCTIONS
+    # =======================
+
+    # Crear Main Menu con información de BD
+    def main_menu(self):
+        self.DBGetNetworkElements()
+
+        os.system('clear')
+        print "Welcome,\n"
+        print "Please choose the menu you want to start:"
+        # print "1. Menu 1"
+        # print "2. Menu 2"
+        # print "3. Menu 3"
+
+        for i in range(len(self.options)) :
+            print ("%s. %s"%(i+1, self.options[i][0]))
+
+        print "\n0. Quit"
+        choice = raw_input(" >>  ")
+        self.exec_menu(choice)
+
+        return
+
+    # Execute menu
+    def exec_menu(self, choice):
+        os.system('clear')
+        ch = choice.lower()
+        if ch == '':
+            self.menu_actions['main_menu']()
+        else:
+            try:
+                self.menu_actions[ch]()
+            except KeyError:
+                print "Invalid selection, please try again.\n"
+                self.menu_actions['main_menu']()
+        return
+
+    # Menu 1
+    def menu1(self):
+        print "Hello Menu 1 !\n"
+        print "*. Back"
+        print "0. Quit"
+        choice = raw_input(" >>  ")
+        self.exec_menu(choice)
+        return
 
 
-# Menu 2
-def menu2():
-    print "Hello Menu 2 !\n"
-    print "9. Back"
-    print "0. Quit"
-    choice = raw_input(" >>  ")
-    exec_menu(choice)
-    return
+    # Menu 2
+    def menu2(self):
+        print "Hello Menu 2 !\n"
+        print "*. Back"
+        print "0. Quit"
+        choice = raw_input(" >>  ")
+        self.exec_menu(choice)
+        return
 
-def menu3():
-    os.system("lssh 10.118.181.126")
+    def menu3():
+        os.system("lssh 10.118.181.126")
 
-    main_menu()
-    return
+        self.main_menu()
+        return
 
-# Back to main menu
-def back():
-    menu_actions['main_menu']()
+    # Back to main menu
+    def back(self):
+        self.menu_actions['main_menu']()
 
-# Exit program
-def exit():
-    sys.exit()
-
-# =======================
-#    MENUS DEFINITIONS
-# =======================
-
-# Menu definition
-menu_actions = {
-    'main_menu': main_menu,
-    '1': menu1,
-    '2': menu2,
-    '3': menu3,
-    '9': back,
-    '0': exit,
-}
+    # Exit program
+    def exit(self):
+        sys.exit()
 
 # =======================
 #      MAIN PROGRAM
@@ -139,5 +158,5 @@ if __name__ == "__main__":
         os.system('/bin/bash')
     else:
         # Launch main menu
-        main_menu()
-        #print DBGetNetworkElements(username)
+        menu = Menu(username)
+        menu.main_menu()
