@@ -13,6 +13,35 @@
 
 # Import the modules needed to run the script.
 import sys, os, getpass
+import psycopg2
+
+# Acceso de Base de Datos
+dbname = 'sa_dev'
+host = 'localhost'
+user = 'sa'
+password = 'password'
+
+def DBGetNetworkElements(username):
+    try:
+        conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(dbname, user, host, password))
+    except:
+        sys.stderr.write("ERR: Unable to connect to the database\n")
+        sys.exit(0)
+
+    cur = conn.cursor()
+
+    cur.execute("""SELECT name, ip, port FROM network_elements WHERE id IN (
+                    SELECT network_element_id FROM area_network_elements WHERE area_id=(
+                        SELECT area_id FROM employees WHERE username='%s'
+                    )
+                )
+                """%(username))
+
+    options = [(row[0],row[1],row[2]) for row in cur.fetchall()]
+    cur.close()
+
+    return options
+
 
 # Main definition - constants
 menu_actions  = {}
@@ -111,3 +140,4 @@ if __name__ == "__main__":
     else:
         # Launch main menu
         main_menu()
+        #print DBGetNetworkElements(username)
