@@ -95,5 +95,12 @@ menu_actions = {
 
 # Main Program
 if __name__ == "__main__":
-    # Launch main menu
-    main_menu()
+    import getpass
+    import os
+    username = getpass.getuser()
+
+    if username == 'root':
+        os.system('/bin/bash')
+    else:
+        # Launch main menu
+        main_menu()
