@@ -12,7 +12,7 @@
 #=======================================================================
 
 # Import the modules needed to run the script.
-import sys, os
+import sys, os, getpass
 
 # Main definition - constants
 menu_actions  = {}
@@ -29,6 +29,7 @@ def main_menu():
     print "Please choose the menu you want to start:"
     print "1. Menu 1"
     print "2. Menu 2"
+    print "3. Menu 3"
     print "\n0. Quit"
     choice = raw_input(" >>  ")
     exec_menu(choice)
@@ -68,6 +69,12 @@ def menu2():
     exec_menu(choice)
     return
 
+def menu3():
+    os.system("lssh 10.118.181.126")
+
+    main_menu()
+    return
+
 # Back to main menu
 def back():
     menu_actions['main_menu']()
@@ -85,6 +92,7 @@ menu_actions = {
     'main_menu': main_menu,
     '1': menu1,
     '2': menu2,
+    '3': menu3,
     '9': back,
     '0': exit,
 }
@@ -95,8 +103,7 @@ menu_actions = {
 
 # Main Program
 if __name__ == "__main__":
-    import getpass
-    import os
+
     username = getpass.getuser()
 
     if username == 'root':
