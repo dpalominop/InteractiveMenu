@@ -48,16 +48,18 @@ class Menu:
 
         cur = conn.cursor()
 
-        cur.execute("""SELECT name, ip, port FROM network_elements WHERE id IN (
-                        SELECT network_element_id FROM command_lists WHERE id IN (
-                            SELECT command_list_id FROM command_list_employees WHERE employee_id=(
-                                SELECT id FROM employees WHERE username='%s'
+        cur.execute("""SELECT ne.name, ne.ip, ne.port, pr.name AS protocol
+                        FROM network_elements AS ne, protocols AS pr WHERE ne.id IN (
+                            SELECT network_element_id FROM command_lists WHERE id IN (
+                                SELECT command_list_id FROM command_list_employees WHERE employee_id=(
+                                    SELECT id FROM employees WHERE username='%s'
+                                )
                             )
-                        )
+                        ) AND pr.id = ne.protocol_id
+                    """%(self.username)
                     )
-                    """%(self.username))
 
-        self.network_elements = [(row[0],row[1],row[2] or 22) for row in cur.fetchall()]
+        self.network_elements = [(row[0],row[1],row[2], row[3]) for row in cur.fetchall()]
         cur.close()
 
         return
@@ -97,7 +99,10 @@ class Menu:
                 elif ch == '*':
                     self.back()
                 else:
-                    self.menu_n(self.network_elements[int(choice)-1][1], self.network_elements[int(choice)-1][2])
+                    self.menu_n(self.network_elements[int(choice)-1][1],
+                                self.network_elements[int(choice)-1][2],
+                                self.network_elements[int(choice)-1][3]
+                                )
             except KeyError:
                 print "Invalid selection, please try again.\n"
                 self.main_menu()
@@ -122,8 +127,13 @@ class Menu:
     #     self.exec_menu(choice)
     #     return
 
-    def menu_n(self, ip, port):
-        os.system("lssh %s:%i"%(ip, port))
+    def menu_n(self, ip, port, protocol):
+        if protocol == 'ssh':
+            os.system("lssh %s:%i"%(ip, port))
+        elif protocol == 'telnet':
+            os.system("telnet %s %i"%(ip, port))
+        else:
+            os.system("%s %s:%i"%(ip, port, protocol))
 
         self.main_menu()
         return
