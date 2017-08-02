@@ -34,6 +34,23 @@ class Menu:
     # =======================
     #     DATABASE FUNCTIONS
     # =======================
+    def DBGetFullName(self):
+        try:
+            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.dbCredential['dbname'],
+                                                                             self.dbCredential['user'],
+                                                                             self.dbCredential['host'],
+                                                                             self.dbCredential['password'])
+                                    )
+        except:
+            sys.stderr.write("ERR: Unable to connect to the database\n")
+            sys.exit(0)
+
+        cur = conn.cursor()
+        cur.execute("SELECT name FROM employees WHERE username='%s'"%(self.username))
+        self.full_name = ([row[0] for row in cur.fetchall()] or ["Anónimo"])[0]
+        cur.close()
+
+        return
 
     def DBGetNetworkElements(self):
         try:
@@ -70,10 +87,11 @@ class Menu:
 
     # Crear Main Menu con información de BD
     def main_menu(self):
+        self.DBGetFullName()
         self.DBGetNetworkElements()
 
         os.system('clear')
-        text =  ["Welcome,\n"]
+        text =  ["Welcome %s,\n"%self.full_name]
         text.append("Please choose the menu you want to start:")
         for i in range(len(self.network_elements)) :
             text.append("%s. %s"%(i+1, self.network_elements[i][0]))
