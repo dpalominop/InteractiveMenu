@@ -12,8 +12,9 @@
 #=======================================================================
 
 # Import the modules needed to run the script.
-import sys, os, getpass
+import sys, os, getpass, socket
 import psycopg2
+from time import gmtime, strftime
 
 class Menu:
     """
@@ -34,7 +35,25 @@ class Menu:
     # =======================
     #     DATABASE FUNCTIONS
     # =======================
-    def DBGetFullName(self):
+    def DBGetDirLog(self):
+        try:
+            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.dbCredential['dbname'],
+                                                                             self.dbCredential['user'],
+                                                                             self.dbCredential['host'],
+                                                                             self.dbCredential['password'])
+                                    )
+        except:
+            sys.stderr.write("ERR: Unable to connect to the database\n")
+            sys.exit(0)
+
+        cur = conn.cursor()
+        cur.execute("SELECT history_file FROM default_permissions")
+        self.dir_log = ([row[0] for row in cur.fetchall()] or ["/var/log/sa"])[0]
+        cur.close()
+
+        return
+
+    def DBGetUserFullName(self):
         try:
             conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.dbCredential['dbname'],
                                                                              self.dbCredential['user'],
@@ -87,7 +106,8 @@ class Menu:
 
     # Crear Main Menu con información de BD
     def main_menu(self):
-        self.DBGetFullName()
+        self.DBGetDirLog()
+        self.DBGetUserFullName()
         self.DBGetNetworkElements()
 
         os.system('clear')
@@ -117,7 +137,8 @@ class Menu:
                 elif ch == '*':
                     self.back()
                 else:
-                    self.menu_n(self.network_elements[int(choice)-1][1],
+                    self.menu_n(self.network_elements[int(choice)-1][0],
+                                self.network_elements[int(choice)-1][1],
                                 self.network_elements[int(choice)-1][2],
                                 self.network_elements[int(choice)-1][3]
                                 )
@@ -145,13 +166,20 @@ class Menu:
     #     self.exec_menu(choice)
     #     return
 
-    def menu_n(self, ip, port, protocol):
+    def menu_n(self, platform, ip, port, protocol):
+        logfile = "%s/%s-%s-%s-%s"%(self.dir_log,
+                                strftime("%Y-%m-%d-%H-%M-%S", gmtime()),
+                                self.username,
+                                platform,
+                                socket.gethostname()
+                                )
+
         if protocol == 'ssh':
-            os.system("lssh %s:%i"%(ip, port))
+            os.system("lssh %s:%i | tee -a %s"%(ip, port, logfile))
         elif protocol == 'telnet':
-            os.system("telnet %s %i"%(ip, port))
+            os.system("telnet -e %s %i | tee -a %s"%(ip, port, logfile))
         else:
-            os.system("%s %s:%i"%(ip, port, protocol))
+            os.system("%s %s:%i | tee -a %s"%(protocol, ip, port, logfile))
 
         self.main_menu()
         return
