@@ -9,7 +9,7 @@ env.base_dir = '/usr/local/src' # Set to your app's directory
 env.app_name = 'imenu' # This will deploy the app to /www/app_name.com/
 env.remote_owner = username
 env.remote_group = username
-env.pip_install_command = ''
+env.pip_install_command = 'pip install -r requirements'
 env.git_clone = 'git@github.com:dpalominop/InteractiveMenu.git' # Your git url
 env.restart_cmd = '' # Restart command
 # or
