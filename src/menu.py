@@ -25,12 +25,34 @@ class Menu:
         self.username = username
 
         # Acceso de Base de Datos
-        self.dbCredential = {
-            'dbname':'sa_dev',
-            'host' :'localhost',
-            'user' :'sa',
-            'password':'password',
-        }
+        self.readConfigFile()
+
+    def readConfigFile(self):
+        import ConfigParser
+        config = ConfigParser.ConfigParser()
+        try:
+            config.read("/etc/lssh.conf")
+            self.dbCredential = {
+                'dbname':'sa_dev',
+                'host' :'localhost',
+                'user' :'sa',
+                'password':'password',
+            }
+            try:
+                options = config.options('database')
+                if 'dbname' in options:
+                    self.dbCredential['dbname'] = config.get('database', 'database')
+                if 'hostname' in options:
+                    self.dbCredential['host'] = config.get('database', 'hostname')
+                if 'username' in options:
+                    self.dbCredential['user'] = config.get('database', 'username')
+                if 'password' in options:
+                    self.dbCredential['password'] = config.get('database', 'password')
+
+            except:
+                print "Not exists section: database."
+        except:
+            print "File /etc/lssh.conf not found."
 
     # =======================
     #     DATABASE FUNCTIONS
