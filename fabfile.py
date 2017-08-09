@@ -23,3 +23,17 @@ def update_sshd_config():
     with cd("%s/%s/current"%(env.base_dir, env.app_name)):
         sudo_run("echo 'Match User *,!root\n\tForceCommand %s/%s/current/src/menu.py' >> /etc/ssh/sshd_config"%(env.base_dir, env.app_name))
         sudo_run("service sshd restart")
+
+@task
+@with_defaults
+def update_lssh_conf():
+    """Update file /etc/lssh.conf on all servers"""
+    db_database = raw_input('db_database:')
+    db_hostname = raw_input('db_hostname:')
+    db_username = raw_input('db_username:')
+    db_password = raw_input('db_password:')
+    sudo_run("echo '[database]\nmotor: postgres\ndatabase: %s\nhostname: %s\nusername: %s\npassword: %s' > /etc/lssh.conf"%(db_database,
+                                                                                                                             db_hostname,
+                                                                                                                             db_username,
+                                                                                                                             db_password)
+             )
