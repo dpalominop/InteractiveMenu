@@ -32,25 +32,41 @@ class Menu:
         config = ConfigParser.ConfigParser()
         try:
             config.read("/etc/lssh.conf")
-            self.dbCredential = {
-                'dbname':'sa_dev',
-                'host' :'localhost',
-                'user' :'sa',
-                'password':'password',
+            self.credential = {
+                'db_dbname':'sa_dev',
+                'db_hostname' :'localhost',
+                'db_username' :'sa',
+                'db_password':'password',
+
+                'sf_hostname' :'localhost',
+                'sf_username' :'sa',
+                'sf_password':'password',
             }
             try:
                 options = config.options('database')
                 if 'database' in options:
-                    self.dbCredential['dbname'] = config.get('database', 'database')
+                    self.credential['db_dbname'] = config.get('database', 'database')
                 if 'hostname' in options:
-                    self.dbCredential['host'] = config.get('database', 'hostname')
+                    self.credential['db_hostname'] = config.get('database', 'hostname')
                 if 'username' in options:
-                    self.dbCredential['user'] = config.get('database', 'username')
+                    self.credential['db_username'] = config.get('database', 'username')
                 if 'password' in options:
-                    self.dbCredential['password'] = config.get('database', 'password')
+                    self.credential['db_password'] = config.get('database', 'password')
 
             except:
                 print "Not exists section: database."
+
+            try:
+                options = config.options('serverfile')
+                if 'hostname' in options:
+                    self.credential['sf_hostname'] = config.get('serverfile', 'hostname')
+                if 'username' in options:
+                    self.credential['sf_username'] = config.get('serverfile', 'username')
+                if 'password' in options:
+                    self.credential['sf_password'] = config.get('serverfile', 'password')
+
+            except:
+                print "Not exists section: serverfile."
         except:
             print "File /etc/lssh.conf not found."
 
@@ -59,10 +75,10 @@ class Menu:
     # =======================
     def DBGetDirLog(self):
         try:
-            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.dbCredential['dbname'],
-                                                                             self.dbCredential['user'],
-                                                                             self.dbCredential['host'],
-                                                                             self.dbCredential['password'])
+            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
+                                                                             self.credential['db_username'],
+                                                                             self.credential['db_hostname'],
+                                                                             self.credential['db_password'])
                                     )
         except:
             sys.stderr.write("ERR: Unable to connect to the database\n")
@@ -77,10 +93,10 @@ class Menu:
 
     def DBGetUserFullName(self):
         try:
-            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.dbCredential['dbname'],
-                                                                             self.dbCredential['user'],
-                                                                             self.dbCredential['host'],
-                                                                             self.dbCredential['password'])
+            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
+                                                                             self.credential['db_username'],
+                                                                             self.credential['db_hostname'],
+                                                                             self.credential['db_password'])
                                     )
         except:
             sys.stderr.write("ERR: Unable to connect to the database\n")
@@ -95,10 +111,10 @@ class Menu:
 
     def DBGetNetworkElements(self):
         try:
-            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.dbCredential['dbname'],
-                                                                             self.dbCredential['user'],
-                                                                             self.dbCredential['host'],
-                                                                             self.dbCredential['password'])
+            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
+                                                                             self.credential['db_username'],
+                                                                             self.credential['db_hostname'],
+                                                                             self.credential['db_password'])
                                     )
         except:
             sys.stderr.write("ERR: Unable to connect to the database\n")
@@ -197,7 +213,11 @@ class Menu:
                                 )
 
         if protocol == 'ssh':
-            os.system("lssh %s:%i | tee -a %s"%(ip, port, logfile))
+            os.system("lssh %s:%i | sshpass -p '%s' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s@%s tee -a %s"%(ip, port,
+                                                                                                                                      self.credential['sf_password'],
+                                                                                                                                      self.credential['sf_username'],
+                                                                                                                                      self.credential['sf_hostname'],
+                                                                                                                                      logfile))
         elif protocol == 'telnet':
             os.system("telnet -e %s %i | tee -a %s"%(ip, port, logfile))
         else:
