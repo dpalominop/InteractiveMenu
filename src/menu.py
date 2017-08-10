@@ -40,7 +40,7 @@ class Menu:
             }
             try:
                 options = config.options('database')
-                if 'dbname' in options:
+                if 'database' in options:
                     self.dbCredential['dbname'] = config.get('database', 'database')
                 if 'hostname' in options:
                     self.dbCredential['host'] = config.get('database', 'hostname')
