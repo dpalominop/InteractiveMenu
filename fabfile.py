@@ -32,8 +32,15 @@ def update_lssh_conf():
     db_hostname = raw_input('db_hostname:')
     db_username = raw_input('db_username:')
     db_password = raw_input('db_password:')
+    sf_hostname = raw_input('sf_hostname:')
+    sf_username = raw_input('sf_username:')
+    sf_password = raw_input('sf_password:')
     sudo_run("echo '[database]\nmotor: postgres\ndatabase: %s\nhostname: %s\nusername: %s\npassword: %s' > /etc/lssh.conf"%(db_database,
                                                                                                                              db_hostname,
                                                                                                                              db_username,
                                                                                                                              db_password)
+             )
+    sudo_run("echo '[fileserver]\nhostname: %s\nusername: %s\npassword: %s' >> /etc/lssh.conf"%(sf_hostname,
+                                                                                                 sf_username,
+                                                                                                 sf_password)
              )
