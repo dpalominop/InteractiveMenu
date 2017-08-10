@@ -213,11 +213,11 @@ class Menu:
                                 )
 
         if protocol == 'ssh':
-            os.system("lssh %s:%i | sshpass -p '%s' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s@%s tee -a %s"%(ip, port,
-                                                                                                                                      self.credential['sf_password'],
-                                                                                                                                      self.credential['sf_username'],
-                                                                                                                                      self.credential['sf_hostname'],
-                                                                                                                                      logfile))
+            os.system("lssh %s:%i | sshpass -p '%s' ssh %s@%s tee -a %s"%(ip, port,
+                                                                          self.credential['sf_password'],
+                                                                          self.credential['sf_username'],
+                                                                          self.credential['sf_hostname'],
+                                                                          logfile))
         elif protocol == 'telnet':
             os.system("telnet -e %s %i | tee -a %s"%(ip, port, logfile))
         else:

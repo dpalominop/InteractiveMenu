@@ -20,9 +20,14 @@ env.restart_cmd = '' # Restart command
 @with_defaults
 def update_sshd_config():
     """Update file /etc/ssh/sshd_config on all servers"""
-    with cd("%s/%s/current"%(env.base_dir, env.app_name)):
-        sudo_run("echo 'Match User *,!root\n\tForceCommand %s/%s/current/src/menu.py' >> /etc/ssh/sshd_config"%(env.base_dir, env.app_name))
-        sudo_run("service sshd restart")
+    sudo_run("echo 'Match User *,!root\n\tForceCommand %s/%s/current/src/menu.py' >> /etc/ssh/sshd_config"%(env.base_dir, env.app_name))
+    sudo_run("service sshd restart")
+
+@task
+@with_defaults
+def update_ssh_config():
+    """Update file /etc/ssh/ssh_config on all servers"""
+    sudo_run("echo 'StrictHostKeyChecking no\nUserKnownHostsFile /dev/null\nLogLevel ERROR' >> /etc/ssh/ssh_config"%(env.base_dir, env.app_name))
 
 @task
 @with_defaults
