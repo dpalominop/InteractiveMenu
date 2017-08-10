@@ -57,13 +57,13 @@ class Menu:
                 print "Not exists section: database."
 
             try:
-                options = config.options('serverfile')
+                options = config.options('fileserver')
                 if 'hostname' in options:
-                    self.credential['sf_hostname'] = config.get('serverfile', 'hostname')
+                    self.credential['sf_hostname'] = config.get('fileserver', 'hostname')
                 if 'username' in options:
-                    self.credential['sf_username'] = config.get('serverfile', 'username')
+                    self.credential['sf_username'] = config.get('fileserver', 'username')
                 if 'password' in options:
-                    self.credential['sf_password'] = config.get('serverfile', 'password')
+                    self.credential['sf_password'] = config.get('fileserver', 'password')
 
             except:
                 print "Not exists section: serverfile."
