@@ -1,20 +1,27 @@
 from fabistrano.deploy import *
 from fabric.api import cd
 
-username = raw_input('Servers Username: ')
-password = raw_input('Servers Password: ')
-env.user = username
-env.password = password
-env.hosts = ["10.123.120.196","10.123.120.197","10.123.120.198","10.123.120.199"]
-env.base_dir = '/usr/local/src' # Set to your app's directory
-env.app_name = 'imenu' # This will deploy the app to /www/app_name.com/
-env.remote_owner = username
-env.remote_group = username
+"""create file .fabricrc with arguments:
+user = ''
+password = ''
+remote_owner = ''
+remote_group = ''
+base_dir = ''
+app_name = ''
+env.restart_cmd = ''
+
+db_database = ''
+db_hostname = ''
+db_username = ''
+db_password = ''
+sf_hostname = ''
+sf_username = ''
+sf_password = ''
+And execute: fab -c .fabricrc my_task"""
+
+env.hosts = ['10.123.120.196', '10.123.120.197', '10.123.120.198', '10.123.120.199']
 env.pip_install_command = 'pip install -r requirements.txt'
-env.git_clone = 'git@github.com:dpalominop/InteractiveMenu.git' # Your git url
-env.restart_cmd = '' # Restart command
-# or
-# env.wsgi_path = "app_name/apache.wsgi" # Relative path to the wsgi file to be touched on restart
+env.git_clone = 'git@github.com:dpalominop/InteractiveMenu.git'
 
 @task
 @with_defaults
@@ -33,21 +40,15 @@ def update_ssh_config():
 @with_defaults
 def update_lssh_conf():
     """Update file /etc/lssh.conf on all servers"""
-    db_database = raw_input('db_database: ')
-    db_hostname = raw_input('db_hostname: ')
-    db_username = raw_input('db_username: ')
-    db_password = raw_input('db_password: ')
-    sf_hostname = raw_input('sf_hostname: ')
-    sf_username = raw_input('sf_username: ')
-    sf_password = raw_input('sf_password: ')
-    sudo_run("echo '[database]\nmotor: postgres\ndatabase: %s\nhostname: %s\nusername: %s\npassword: %s' > /etc/lssh.conf"%(db_database,
-                                                                                                                             db_hostname,
-                                                                                                                             db_username,
-                                                                                                                             db_password)
+
+    sudo_run("echo '[database]\nmotor: postgres\ndatabase: %s\nhostname: %s\nusername: %s\npassword: %s' > /etc/lssh.conf"%(env.db_database,
+                                                                                                                             env.db_hostname,
+                                                                                                                             env.db_username,
+                                                                                                                             env.db_password)
              )
-    sudo_run("echo '[fileserver]\nhostname: %s\nusername: %s\npassword: %s' >> /etc/lssh.conf"%(sf_hostname,
-                                                                                                 sf_username,
-                                                                                                 sf_password)
+    sudo_run("echo '[fileserver]\nhostname: %s\nusername: %s\npassword: %s' >> /etc/lssh.conf"%(env.sf_hostname,
+                                                                                                 env.sf_username,
+                                                                                                 env.sf_password)
              )
 
 @task
