@@ -34,7 +34,7 @@ def update_sshd_config():
 @with_defaults
 def update_ssh_config():
     """Update file /etc/ssh/ssh_config on all servers"""
-    sudo_run("echo 'StrictHostKeyChecking no\nUserKnownHostsFile /dev/null\nLogLevel ERROR' >> /etc/ssh/ssh_config"%(env.base_dir, env.app_name))
+    sudo_run("echo 'StrictHostKeyChecking no\nUserKnownHostsFile /dev/null\nLogLevel ERROR' >> /etc/ssh/ssh_config")
 
 @task
 @with_defaults
