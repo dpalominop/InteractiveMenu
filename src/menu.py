@@ -14,7 +14,7 @@
 # Import the modules needed to run the script.
 import sys, os, getpass, socket
 import psycopg2
-from time import gmtime, strftime
+from datetime import datetime
 
 class Menu:
     """
@@ -138,6 +138,51 @@ class Menu:
 
         return
 
+    def DBSetLogRegister(self, employee, network_element, server, initiation, logfile, timestamp):
+        try:
+            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
+                                                                             self.credential['db_username'],
+                                                                             self.credential['db_hostname'],
+                                                                             self.credential['db_password'])
+                                    )
+        except:
+            sys.stderr.write("ERR: Unable to connect to the database\n")
+            sys.exit(0)
+
+        cur = conn.cursor()
+
+        cur.execute("SELECT id FROM employees WHERE username = '%s'"%(employee))
+        employee_id = cur.fetchall()[0][0]
+
+        cur.execute("SELECT id FROM network_elements WHERE name = '%s'"%(network_element))
+        network_element_id = cur.fetchall()[0][0]
+
+        cur.execute("SELECT id FROM servers WHERE hostname = '%s'"%(server))
+        server_id = cur.fetchall()[0][0]
+
+        query = """INSERT INTO sessions (document_updated_at, created_at,
+                                        updated_at,
+                                        employee_id, network_element_id,
+                                        server_id, initiation,
+                                        document_file_name, document_content_type)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+
+        data = (timestamp, timestamp, timestamp,
+                employee_id, network_element_id,
+                 server_id, initiation,
+                 logfile, 'text/plain')
+
+        cur.execute(query, data)
+
+        try:
+            conn.commit()
+            conn.close()
+        except:
+            print "Unable to make commit"
+
+        return
+
+
     # =======================
     #     MENUS FUNCTIONS
     # =======================
@@ -205,23 +250,31 @@ class Menu:
     #     return
 
     def menu_n(self, platform, ip, port, protocol):
-        logfile = "%s/%s-%s-%s-%s"%(self.dir_log,
-                                strftime("%Y-%m-%d-%H-%M-%S", gmtime()),
+        timestamp = datetime.utcnow()
+        zone_time = datetime.now()
+        logfile = "%s-%s-%s-%s"%(zone_time.strftime("%Y-%m-%d-%H-%M-%S"),
                                 self.username,
                                 platform,
                                 socket.gethostname()
                                 )
 
+        ssh_log = "sshpass -p '%s' ssh %s@%s tee -a %s/%s"%(self.credential['sf_password'],
+                                                              self.credential['sf_username'],
+                                                              self.credential['sf_hostname'],
+                                                              self.dir_log,
+                                                              logfile
+                                                            )
+
+        self.DBSetLogRegister(self.username, platform,
+                              socket.gethostname(), zone_time,
+                              logfile, timestamp)
+
         if protocol == 'ssh':
-            os.system("lssh %s:%i | sshpass -p '%s' ssh %s@%s tee -a %s"%(ip, port,
-                                                                          self.credential['sf_password'],
-                                                                          self.credential['sf_username'],
-                                                                          self.credential['sf_hostname'],
-                                                                          logfile))
+            os.system("lssh %s:%i | %s"%(ip, port, ssh_log))
         elif protocol == 'telnet':
-            os.system("telnet -e %s %i | tee -a %s"%(ip, port, logfile))
+            os.system("telnet -e %s %i | %s"%(ip, port, ssh_log))
         else:
-            os.system("%s %s:%i | tee -a %s"%(protocol, ip, port, logfile))
+            os.system("%s %s:%i | %s"%(protocol, ip, port, ssh_log))
 
         self.main_menu()
         return
