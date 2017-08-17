@@ -27,7 +27,7 @@ env.git_clone = 'git@github.com:dpalominop/InteractiveMenu.git'
 @with_defaults
 def update_sshd_config():
     """Update file /etc/ssh/sshd_config on all servers"""
-    sudo_run("echo 'Match User *,!root\n\tForceCommand %s/%s/current/src/menu.py' >> /etc/ssh/sshd_config"%(env.base_dir, env.app_name))
+    sudo_run("echo 'Match User *,!root,!nksaccess\n\tForceCommand %s/%s/current/src/menu.py' >> /etc/ssh/sshd_config"%(env.base_dir, env.app_name))
     sudo_run("service sshd restart")
 
 @task
@@ -35,6 +35,7 @@ def update_sshd_config():
 def update_ssh_config():
     """Update file /etc/ssh/ssh_config on all servers"""
     sudo_run("echo 'StrictHostKeyChecking no\nUserKnownHostsFile /dev/null\nLogLevel ERROR' >> /etc/ssh/ssh_config")
+    sudo_run("service sshd restart")
 
 @task
 @with_defaults
