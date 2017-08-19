@@ -62,4 +62,4 @@ def yum_update():
 @with_defaults
 def reboot():
     """Execute 'reboot' atfer 5 seconds in all servers"""
-    sudo_run("( sleep 5 ; reboot ) &")
+    sudo_run("shutdown -r +1")
