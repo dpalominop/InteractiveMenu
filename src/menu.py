@@ -138,6 +138,61 @@ class Menu:
 
         return
 
+    def DBGetMenu(self):
+        try:
+            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
+                                                                             self.credential['db_username'],
+                                                                             self.credential['db_hostname'],
+                                                                             self.credential['db_password'])
+                                    )
+        except:
+            sys.stderr.write("ERR: Unable to connect to the database\n")
+            sys.exit(0)
+
+        cur = conn.cursor()
+
+        cur.execute("""SELECT ne.name, ne.ip, ne.port,
+                            pr.name,
+                            tp.name,
+                            sy.name,
+                            pl.name, pl.vendor_id, pl.location_id
+                        FROM network_elements AS ne,
+                            protocols AS pr,
+                            types AS tp,
+                            systems AS sy,
+                            platforms AS pl
+                        WHERE ne.id IN (
+                            SELECT network_element_id FROM command_lists WHERE id IN (
+                                SELECT command_list_id FROM command_list_employees WHERE employee_id=(
+                                    SELECT id FROM employees WHERE username='%s'
+                                )
+                            )
+                        ) AND pr.id = ne.protocol_id
+                        AND tp.id = ne.type_id
+                        AND sy.id = tp.system_id
+                        AND pl.id = sy.platform_id
+                    """%(self.username)
+                    )
+
+        nes = cur.fetchall()
+        print nes
+        res = {}
+        for ne in nes:
+            if ne[6] in res:
+                if ne[5] in res[ne[6]]:
+                    if ne[4] in res[ne[6]][ne[5]]:
+                        res[ne[6]][ne[5]][ne[4]].append(ne[0])
+                    else:
+                        res[ne[6]][ne[5]][ne[4]] = [ne[0]]
+                else:
+                    res[ne[6]][ne[5]] = {ne[4]: [ne[0]]}
+            else:
+                res[ne[6]] = {ne[5]: {ne[4]: [ne[0]]}}
+        print res
+        cur.close()
+
+        return res
+
     def DBSetLogRegister(self, employee, network_element, server, initiation, logfile, timestamp):
         try:
             conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
@@ -192,13 +247,14 @@ class Menu:
         self.DBGetDirLog()
         self.DBGetUserFullName()
         self.DBGetNetworkElements()
+        self.DBGetMenu()
 
-        os.system('clear')
+        # os.system('clear')
         text =  ["Welcome %s,\n"%self.full_name]
         text.append("Please choose the menu you want to start:")
-        text.append("1. Platforms filtered by Vendor")
-        text.append("2. Platforms filtered by Location")
-        text.append("3. All Platform")
+        text.append("1. All Platform")
+        text.append("2. Platforms filtered by Vendor")
+        text.append("3. Platforms filtered by Location")
         text.append("\n0. Quit")
         print '\n'.join(text)
 
