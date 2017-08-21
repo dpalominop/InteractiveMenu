@@ -196,15 +196,38 @@ class Menu:
         os.system('clear')
         text =  ["Welcome %s,\n"%self.full_name]
         text.append("Please choose the menu you want to start:")
-        for i in range(len(self.network_elements)) :
-            text.append("%s. %s"%(i+1, self.network_elements[i][0]))
+        text.append("1. Platforms filtered by Vendor")
+        text.append("2. Platforms filtered by Location")
+        text.append("3. All Platform")
         text.append("\n0. Quit")
-
         print '\n'.join(text)
+
         choice = raw_input(">>  ")
+        self.choiceMenu(choice)
+        return
 
-        self.exec_menu(choice)
+    #Choice Menu
+    def choiceMenu(self, choice):
+        os.system('clear')
+        ch = choice.lower()
+        if ch == '':
+            self.main_menu()
+        else:
+            try:
+                if ch == '0':
+                    self.exit()
+                elif ch == '*':
+                    self.back()
+                elif ch == '1':
+                    self.menuPlatformVendors()
+                elif ch == '2':
+                    self.menuPlatformsLocations()
+                elif ch == '3':
+                    self.menuPlatformsAll()
 
+            except KeyError:
+                print "Invalid selection, please try again.\n"
+                self.main_menu()
         return
 
     # Execute menu
@@ -220,41 +243,61 @@ class Menu:
                 elif ch == '*':
                     self.back()
                 else:
-                    self.menu_n(self.network_elements[int(choice)-1][0],
-                                self.network_elements[int(choice)-1][1],
-                                self.network_elements[int(choice)-1][2],
-                                self.network_elements[int(choice)-1][3]
-                                )
+                    try:
+                        indice = int(choice)-1
+
+                        self.executeNE(self.network_elements[indice][0],
+                                        self.network_elements[indice][1],
+                                        self.network_elements[indice][2],
+                                        self.network_elements[indice][3]
+                                        )
+                    except ValueError:
+                        raise KeyError
             except KeyError:
                 print "Invalid selection, please try again.\n"
                 self.main_menu()
         return
 
-    # # Menu 1
-    # def menu1(self):
-    #     print "Hello Menu 1 !\n"
-    #     print "*. Back"
-    #     print "0. Quit"
-    #     choice = raw_input(" >>  ")
-    #     self.exec_menu(choice)
-    #     return
-    #
-    #
-    # # Menu 2
-    # def menu2(self):
-    #     print "Hello Menu 2 !\n"
-    #     print "*. Back"
-    #     print "0. Quit"
-    #     choice = raw_input(" >>  ")
-    #     self.exec_menu(choice)
-    #     return
+    # Menu 1
+    def menuPlatformVendors(self):
+        print "All Platforms filtered by type of Vendor:\n"
+        print "*. Back"
+        print "0. Quit"
+        choice = raw_input(" >>  ")
+        self.exec_menu(choice)
+        return
 
-    def menu_n(self, platform, ip, port, protocol):
+
+    # Menu 2
+    def menuPlatformsLocations(self):
+        print "All Platforms filtered by type of Location:\n"
+        print "*. Back"
+        print "0. Quit"
+        choice = raw_input(" >>  ")
+        self.exec_menu(choice)
+        return
+
+    # Menu 3
+    def menuPlatformsAll(self):
+        os.system('clear')
+        text =  ["All Platforms:\n"]
+        text.append("Please choose the menu you want to start:")
+        for i in range(len(self.network_elements)) :
+            text.append("%s. %s"%(i+1, self.network_elements[i][0]))
+        text.append("\n*. Back\n0. Quit")
+
+        print '\n'.join(text)
+        choice = raw_input(">>  ")
+
+        self.exec_menu(choice)
+        return
+
+    def executeNE(self, ne_name, ip, port, protocol):
         timestamp = datetime.utcnow()
         zone_time = datetime.now()
         logfile = "%s-%s-%s-%s"%(zone_time.strftime("%Y-%m-%d-%H-%M-%S"),
                                 self.username,
-                                platform,
+                                ne_name,
                                 socket.gethostname()
                                 )
 
@@ -265,7 +308,7 @@ class Menu:
                                                               logfile
                                                             )
 
-        self.DBSetLogRegister(self.username, platform,
+        self.DBSetLogRegister(self.username, ne_name,
                               socket.gethostname(), zone_time,
                               logfile, timestamp)
 
