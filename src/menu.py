@@ -16,6 +16,10 @@ import sys, os, getpass, socket
 import psycopg2
 from datetime import datetime
 
+class dotdict(dict):
+    def __getattr__(self, name):
+        return self[name]
+
 class Menu:
     """
         Creación dinámica de Menu basado en Base de Datos
@@ -175,23 +179,43 @@ class Menu:
                     )
 
         nes = cur.fetchall()
-        print nes
-        res = {}
+        self.platforms = {}
         for ne in nes:
-            if ne[6] in res:
-                if ne[5] in res[ne[6]]:
-                    if ne[4] in res[ne[6]][ne[5]]:
-                        res[ne[6]][ne[5]][ne[4]].append(ne[0])
+            if ne[6] in self.platforms:
+                if ne[5] in self.platforms[ne[6]]:
+                    if ne[4] in self.platforms[ne[6]][ne[5]]:
+                        self.platforms[ne[6]][ne[5]][ne[4]][ne[0]] = {'name':ne[0],
+                                                                      'ip':ne[1],
+                                                                      'port':ne[2],
+                                                                      'protocol':ne[3]
+                                                                      }
                     else:
-                        res[ne[6]][ne[5]][ne[4]] = [ne[0]]
+                        self.platforms[ne[6]][ne[5]][ne[4]] = {ne[0]:{'name':ne[0],
+                                                                      'ip':ne[1],
+                                                                      'port':ne[2],
+                                                                      'protocol':ne[3]
+                                                                      }
+                                                               }
                 else:
-                    res[ne[6]][ne[5]] = {ne[4]: [ne[0]]}
+                    self.platforms[ne[6]][ne[5]] = {ne[4]: {ne[0]:{'name':ne[0],
+                                                                   'ip':ne[1],
+                                                                   'port':ne[2],
+                                                                   'protocol':ne[3]
+                                                                   }
+                                                            }
+                                                    }
             else:
-                res[ne[6]] = {ne[5]: {ne[4]: [ne[0]]}}
-        print res
+                self.platforms[ne[6]] = {ne[5]: {ne[4]: {ne[0]:{'name':ne[0],
+                                                                'ip':ne[1],
+                                                                'port':ne[2],
+                                                                'protocol':ne[3]
+                                                                }
+                                                         }
+                                                 }
+                                         }
         cur.close()
 
-        return res
+        return self.platforms
 
     def DBSetLogRegister(self, employee, network_element, server, initiation, logfile, timestamp):
         try:
@@ -246,10 +270,10 @@ class Menu:
     def main_menu(self):
         self.DBGetDirLog()
         self.DBGetUserFullName()
-        self.DBGetNetworkElements()
+        # self.DBGetNetworkElements()
         self.DBGetMenu()
 
-        # os.system('clear')
+        os.system('clear')
         text =  ["Welcome %s,\n"%self.full_name]
         text.append("Please choose the menu you want to start:")
         text.append("1. All Platform")
@@ -275,40 +299,13 @@ class Menu:
                 elif ch == '*':
                     self.back()
                 elif ch == '1':
-                    self.menuPlatformVendors()
+                    # self.menuPlatformsAll()
+                    self.printMenu()
                 elif ch == '2':
-                    self.menuPlatformsLocations()
+                    self.menuPlatformVendors()
                 elif ch == '3':
-                    self.menuPlatformsAll()
+                    self.menuPlatformLocations()
 
-            except KeyError:
-                print "Invalid selection, please try again.\n"
-                self.main_menu()
-        return
-
-    # Execute menu
-    def exec_menu(self, choice):
-        os.system('clear')
-        ch = choice.lower()
-        if ch == '':
-            self.main_menu()
-        else:
-            try:
-                if ch == '0':
-                    self.exit()
-                elif ch == '*':
-                    self.back()
-                else:
-                    try:
-                        indice = int(choice)-1
-
-                        self.executeNE(self.network_elements[indice][0],
-                                        self.network_elements[indice][1],
-                                        self.network_elements[indice][2],
-                                        self.network_elements[indice][3]
-                                        )
-                    except ValueError:
-                        raise KeyError
             except KeyError:
                 print "Invalid selection, please try again.\n"
                 self.main_menu()
@@ -320,32 +317,76 @@ class Menu:
         print "*. Back"
         print "0. Quit"
         choice = raw_input(" >>  ")
-        self.exec_menu(choice)
+        self.printMenu(choice)
         return
 
-
     # Menu 2
-    def menuPlatformsLocations(self):
+    def menuPlatformLocations(self):
         print "All Platforms filtered by type of Location:\n"
         print "*. Back"
         print "0. Quit"
         choice = raw_input(" >>  ")
-        self.exec_menu(choice)
+        self.printMenu(choice)
         return
 
-    # Menu 3
-    def menuPlatformsAll(self):
+    def printMenu(self, ltype='', system='', platform=''):
         os.system('clear')
-        text =  ["All Platforms:\n"]
-        text.append("Please choose the menu you want to start:")
-        for i in range(len(self.network_elements)) :
-            text.append("%s. %s"%(i+1, self.network_elements[i][0]))
+        text = []
+        obj = None
+        if ltype:
+            text.append("Please choose the NE:\n")
+            obj = self.platforms[platform][system][ltype]
+        elif system:
+            text.append("Please choose the Type:\n")
+            obj = self.platforms[platform][system]
+        elif platform:
+            text.append("Please choose the System:\n")
+            obj = self.platforms[platform]
+        else:
+            text.append("All Platforms:\nPlease choose the platform:\n")
+            obj = self.platforms
+
+        keys = obj.keys()
+        for i in range(len(keys)):
+            text.append("%i. %s"%(i+1, keys[i]))
         text.append("\n*. Back\n0. Quit")
 
         print '\n'.join(text)
         choice = raw_input(">>  ")
 
-        self.exec_menu(choice)
+        if choice not in ['*','0']+[str(i+1) for i in range(len(keys))]:
+            self.printMenu(ltype=ltype, system=system, platform=platform)
+        elif choice == '0':
+            self.exit()
+        elif choice == '*':
+            if ltype:
+                self.printMenu(ltype='', system=system, platform=platform)
+            elif system:
+                self.printMenu(ltype='', system='', platform=platform)
+            elif platform:
+                self.printMenu(ltype='', system='', platform='')
+            else:
+                self.main_menu()
+        else:
+            self.choiceOption(keys[int(choice)-1], ltype=ltype, system=system, platform=platform)
+        return
+
+    def choiceOption(self, option, ltype='', system='', platform=''):
+        os.system('clear')
+        try:
+            obj = None
+            if ltype:
+                obj = dotdict(self.platforms[platform][system][ltype][option])
+                self.executeNE(obj.name, obj.ip, obj.port, obj.protocol)
+            elif system:
+                self.printMenu(ltype=option, system=system, platform=platform)
+            elif platform:
+                self.printMenu(ltype='', system=option, platform=platform)
+            else:
+                self.printMenu(ltype='', system='', platform=option)
+
+        except Exception:
+            self.printMenu(ltype=ltype, system=system, platform=platform)
         return
 
     def executeNE(self, ne_name, ip, port, protocol):
