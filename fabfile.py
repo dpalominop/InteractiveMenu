@@ -63,3 +63,9 @@ def yum_update():
 def reboot():
     """Execute 'reboot' atfer 5 seconds in all servers"""
     sudo_run("shutdown -r +1")
+
+@task
+@with_defaults
+def restart_ws():
+    """Restart the WebService in all servers"""
+    sudo_run("passenger-config restart-app /var/www/lssh/current")
