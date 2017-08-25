@@ -165,16 +165,16 @@ class Menu:
                             types AS tp,
                             systems AS sy,
                             platforms AS pl
-                        WHERE ne.id IN (
-                            SELECT network_element_id FROM command_lists WHERE id IN (
+                        WHERE (ne.platform_id, ne.system_id, ne.type_id) IN (
+                            SELECT platform_id, system_id, type_id FROM command_lists WHERE id IN (
                                 SELECT command_list_id FROM command_list_employees WHERE employee_id=(
                                     SELECT id FROM employees WHERE username='%s'
                                 )
                             )
                         ) AND pr.id = ne.protocol_id
                         AND tp.id = ne.type_id
-                        AND sy.id = tp.system_id
-                        AND pl.id = sy.platform_id
+                        AND sy.id = ne.system_id
+                        AND pl.id = ne.platform_id
                     """%(self.username)
                     )
 
