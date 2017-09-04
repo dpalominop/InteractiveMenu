@@ -113,7 +113,7 @@ class Menu:
 
         return
 
-    def DBGetNetworkElements(self):
+    def DBGetPlatforms(self, location_id='', vendor_id='', state_id='', location=[], vendor=[]):
         try:
             conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
                                                                              self.credential['db_username'],
@@ -126,40 +126,11 @@ class Menu:
 
         cur = conn.cursor()
 
-        cur.execute("""SELECT ne.name, ne.ip, ne.port, pr.name AS protocol
-                        FROM network_elements AS ne, protocols AS pr WHERE ne.id IN (
-                            SELECT network_element_id FROM command_lists WHERE id IN (
-                                SELECT command_list_id FROM command_list_employees WHERE employee_id=(
-                                    SELECT id FROM employees WHERE username='%s'
-                                )
-                            )
-                        ) AND pr.id = ne.protocol_id
-                    """%(self.username)
-                    )
-
-        self.network_elements = [(row[0],row[1],row[2], row[3]) for row in cur.fetchall()]
-        cur.close()
-
-        return
-
-    def DBGetMenu(self):
-        try:
-            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
-                                                                             self.credential['db_username'],
-                                                                             self.credential['db_hostname'],
-                                                                             self.credential['db_password'])
-                                    )
-        except:
-            sys.stderr.write("ERR: Unable to connect to the database\n")
-            sys.exit(0)
-
-        cur = conn.cursor()
-
-        cur.execute("""SELECT ne.name, ne.ip, ne.port,
+        query1 = """SELECT ne.name, ne.ip, ne.port,
                             pr.name,
                             tp.name,
                             sy.name,
-                            pl.name, pl.vendor_id, pl.location_id
+                            pl.name, pl.vendor_id, ne.location_id
                         FROM network_elements AS ne,
                             protocols AS pr,
                             types AS tp,
@@ -168,15 +139,33 @@ class Menu:
                         WHERE (ne.platform_id, ne.system_id, ne.type_id) IN (
                             SELECT platform_id, system_id, type_id FROM command_lists WHERE id IN (
                                 SELECT command_list_id FROM command_list_employees WHERE employee_id=(
-                                    SELECT id FROM employees WHERE username='%s'
+                                    SELECT id FROM employees WHERE username=%s
                                 )
                             )
-                        ) AND pr.id = ne.protocol_id
-                        AND tp.id = ne.type_id
-                        AND sy.id = ne.system_id
-                        AND pl.id = ne.platform_id
-                    """%(self.username)
-                    )
+                        )
+                    """
+        query2 = """
+                    AND pr.id = ne.protocol_id
+                    AND tp.id = ne.type_id
+                    AND sy.id = ne.system_id
+                    AND pl.id = ne.platform_id
+                    """
+        args = (self.username, str(tuple(location)).strip("()").rstrip(','))
+
+        if not location and not vendor:
+            query = query1 + query2
+            args = (self.username,)
+        elif location and not vendor:
+            query = query1 + "AND ne.location_id IN %s" + query2
+            args = (self.username, tuple(location))
+        elif not location and vendor:
+            query = query1 + "AND ne.vendor_id IN %s" + query2
+            args = (self.username, tuple(vendor))
+        else:
+            query = query1 + "AND ne.location_id IN (%s) AND ne.location_id IN (%s)" + query2
+            args = (self.username, tuple(location), tuple(vedor))
+
+        cur.execute(query, args)
 
         nes = cur.fetchall()
         self.platforms = {}
@@ -270,66 +259,57 @@ class Menu:
     def main_menu(self):
         self.DBGetDirLog()
         self.DBGetUserFullName()
-        # self.DBGetNetworkElements()
-        self.DBGetMenu()
 
         os.system('clear')
         text =  ["Welcome %s,\n"%self.full_name]
-        text.append("Please choose the menu you want to start:")
-        text.append("1. All Platform")
-        text.append("2. Platforms filtered by Vendor")
-        text.append("3. Platforms filtered by Location")
-        text.append("\n0. Quit")
+        text.append("... Disclaimer ...\n")
+        text.append("Accept? (y)es or (n)ot")
         print '\n'.join(text)
-
-        choice = raw_input(">>  ")
-        self.choiceMenu(choice)
+        ans = raw_input(">>  ")
+        self.getAnswer(ans)
         return
 
     #Choice Menu
-    def choiceMenu(self, choice):
-        os.system('clear')
-        ch = choice.lower()
+    def getAnswer(self, ans):
+        # os.system('clear')
+        ch = ans.lower()
         if ch == '':
             self.main_menu()
         else:
             try:
-                if ch == '0':
+                if ch == 'n':
                     self.exit()
-                elif ch == '*':
-                    self.back()
-                elif ch == '1':
-                    # self.menuPlatformsAll()
+                elif ch == 'y':
                     self.printMenu()
-                elif ch == '2':
-                    self.menuPlatformVendors()
-                elif ch == '3':
-                    self.menuPlatformLocations()
 
             except KeyError:
                 print "Invalid selection, please try again.\n"
                 self.main_menu()
         return
 
-    # Menu 1
-    def menuPlatformVendors(self):
-        print "All Platforms filtered by type of Vendor:\n"
-        print "*. Back"
-        print "0. Quit"
-        choice = raw_input(" >>  ")
-        self.printMenu(choice)
-        return
+    def getInteractiveOption(self, message='', model=''):
+        os.system('clear')
+        uinput = raw_input(message)
+        if uinput == '':
+            return getInteractiveOption(message=message, model=model)
+        else:
+            try:
+                conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
+                                                                                 self.credential['db_username'],
+                                                                                 self.credential['db_hostname'],
+                                                                                 self.credential['db_password'])
+                                        )
+            except:
+                sys.stderr.write("ERR: Unable to connect to the database\n")
+                sys.exit(0)
 
-    # Menu 2
-    def menuPlatformLocations(self):
-        print "All Platforms filtered by type of Location:\n"
-        print "*. Back"
-        print "0. Quit"
-        choice = raw_input(" >>  ")
-        self.printMenu(choice)
-        return
+            cur = conn.cursor()
+            cur.execute("SELECT id FROM %s WHERE name ~* '.*%s.*'"%(model, uinput))
 
-    def printMenu(self, ltype='', system='', platform=''):
+            return [int(el[0]) for el in cur.fetchall()]
+
+    def printMenu(self, ltype='', system='', platform='', location=[], vendor=[]):
+        self.DBGetPlatforms(location=location, vendor=vendor)
         os.system('clear')
         text = []
         obj = None
@@ -343,35 +323,42 @@ class Menu:
             text.append("Please choose the System:\n")
             obj = self.platforms[platform]
         else:
-            text.append("All Platforms:\nPlease choose the platform:\n")
+            text.append("Please choose the platform:\n")
             obj = self.platforms
 
         keys = obj.keys()
         for i in range(len(keys)):
             text.append("%i. %s"%(i+1, keys[i]))
+        text.append("\n%. Filter By Location\n#. Filter By Vendor")
         text.append("\n*. Back\n0. Quit")
 
         print '\n'.join(text)
         choice = raw_input(">>  ")
 
-        if choice not in ['*','0']+[str(i+1) for i in range(len(keys))]:
-            self.printMenu(ltype=ltype, system=system, platform=platform)
+        if choice not in ['*','%','#','0']+[str(i+1) for i in range(len(keys))]:
+            self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor)
         elif choice == '0':
             self.exit()
+        elif choice == '%':
+            options = self.getInteractiveOption(message='Location:\n>> ', model='locations')
+            self.printMenu(ltype=ltype, system=system, platform=platform, location=options, vendor=vendor)
+        elif choice == '#':
+            options = self.getInteractiveOption(message='Vendor:\n>> ', model='vendors')
+            self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=options)
         elif choice == '*':
             if ltype:
-                self.printMenu(ltype='', system=system, platform=platform)
+                self.printMenu(ltype='', system=system, platform=platform, location=location, vendor=vendor)
             elif system:
-                self.printMenu(ltype='', system='', platform=platform)
+                self.printMenu(ltype='', system='', platform=platform, location=location, vendor=vendor)
             elif platform:
-                self.printMenu(ltype='', system='', platform='')
+                self.printMenu(ltype='', system='', platform='', location=location, vendor=vendor)
             else:
                 self.main_menu()
         else:
-            self.choiceOption(keys[int(choice)-1], ltype=ltype, system=system, platform=platform)
+            self.choiceOption(keys[int(choice)-1], ltype=ltype, system=system, platform=platform, location=location, vendor=vendor)
         return
 
-    def choiceOption(self, option, ltype='', system='', platform=''):
+    def choiceOption(self, option, ltype='', system='', platform='', location='', vendor=''):
         os.system('clear')
         try:
             obj = None
@@ -379,14 +366,14 @@ class Menu:
                 obj = dotdict(self.platforms[platform][system][ltype][option])
                 self.executeNE(obj.name, obj.ip, obj.port, obj.protocol)
             elif system:
-                self.printMenu(ltype=option, system=system, platform=platform)
+                self.printMenu(ltype=option, system=system, platform=platform, location=location, vendor=vendor)
             elif platform:
-                self.printMenu(ltype='', system=option, platform=platform)
+                self.printMenu(ltype='', system=option, platform=platform, location=location, vendor=vendor)
             else:
-                self.printMenu(ltype='', system='', platform=option)
+                self.printMenu(ltype='', system='', platform=option, location=location, vendor=vendor)
 
         except Exception:
-            self.printMenu(ltype=ltype, system=system, platform=platform)
+            self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor)
         return
 
     def executeNE(self, ne_name, ip, port, protocol):
