@@ -113,6 +113,22 @@ class Menu:
 
         return
 
+    def DBGetIntro(self):
+        try:
+            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
+                                                                             self.credential['db_username'],
+                                                                             self.credential['db_hostname'],
+                                                                             self.credential['db_password'])
+                                    )
+        except:
+            sys.stderr.write("ERR: Unable to connect to the database\n")
+            sys.exit(0)
+
+        cur = conn.cursor()
+        cur.execute("SELECT intro FROM default_permissions")
+        self.intro = ([row[0] for row in cur.fetchall()] or [""])[0]
+        cur.close()
+
     def DBGetPlatforms(self, location_id='', vendor_id='', state_id='', location=[], vendor=[]):
         try:
             conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
@@ -259,10 +275,11 @@ class Menu:
     def main_menu(self):
         self.DBGetDirLog()
         self.DBGetUserFullName()
+        self.DBGetIntro()
 
         os.system('clear')
         text =  ["Welcome %s,\n"%self.full_name]
-        text.append("... Disclaimer ...\n")
+        text.append(self.intro+'\n')
         text.append("Accept? (y)es or (n)ot")
         print '\n'.join(text)
         ans = raw_input(">>  ")
