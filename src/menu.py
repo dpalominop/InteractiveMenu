@@ -298,6 +298,8 @@ class Menu:
                     self.exit()
                 elif ch == 'y':
                     self.printMenu()
+                else:
+                    self.main_menu()
 
             except KeyError:
                 print "Invalid selection, please try again.\n"
