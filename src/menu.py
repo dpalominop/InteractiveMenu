@@ -355,7 +355,7 @@ class Menu:
         if location:
             text.append("Location: %s"%self.DBGetRegisterNameById(location, model='locations'))
         if vendor:
-            text.append("Vendor: %s"%self.DBGetRegisterNameById(location, model='vendors'))
+            text.append("Vendor: %s"%self.DBGetRegisterNameById(vendor, model='vendors'))
 
         obj = None
         if ltype:
@@ -384,7 +384,7 @@ class Menu:
         keys = obj.keys()
         for i in range(len(keys)):
             text.append("%i. %s"%(i+1, keys[i]))
-        text.append("\nSet Filter By:")
+        text.append("\nGroup By:")
         text.append("%. Location\n#. Vendor")
         text.append("\n*. Back\n0. Quit")
         print '\n'.join(text)
