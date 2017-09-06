@@ -420,6 +420,7 @@ class Menu:
             if ltype:
                 obj = dotdict(self.platforms[platform][system][ltype][option])
                 self.executeNE(obj.name, obj.ip, obj.port, obj.protocol)
+                self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor)
             elif system:
                 self.printMenu(ltype=option, system=system, platform=platform, location=location, vendor=vendor)
             elif platform:
@@ -461,7 +462,6 @@ class Menu:
         else:
             os.system("%s %s:%i | %s"%(protocol, ip, port, ssh_log))
 
-        self.main_menu()
         return
 
     # Back to main menu
