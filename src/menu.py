@@ -148,7 +148,7 @@ class Menu:
         cur.close()
         return name_regs
 
-    def DBGetPlatforms(self, state_id='', location=[], vendor=[]):
+    def DBGetPlatforms(self, location=[], vendor=[], state=[]):
         try:
             conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
                                                                              self.credential['db_username'],
@@ -187,18 +187,30 @@ class Menu:
                     """
         args = (self.username,)
 
-        if not location and not vendor:
+        if not location and not vendor and not state:
             query = query1 + query2
             args = (self.username,)
-        elif location and not vendor:
-            query = query1 + "AND ne.location_id IN %s" + query2
-            args = (self.username, tuple(location))
-        elif not location and vendor:
+        elif not location and not vendor and state:
+            query = query1 + "AND pl.state_id IN %s" + query2
+            args = (self.username, tuple(state))
+        elif not location and vendor and not state:
             query = query1 + "AND ne.vendor_id IN %s" + query2
             args = (self.username, tuple(vendor))
-        else:
-            query = query1 + "AND ne.location_id IN (%s) AND ne.location_id IN (%s)" + query2
-            args = (self.username, tuple(location), tuple(vedor))
+        elif not location and vendor and state:
+            query = query1 + "AND ne.vendor_id IN %s AND pl.state_id IN %s" + query2
+            args = (self.username, tuple(vendor), tuple(state))
+        elif location and not vendor and not state:
+            query = query1 + "AND ne.location_id IN %s" + query2
+            args = (self.username, tuple(location))
+        elif location and not vendor and state:
+            query = query1 + "AND ne.location_id IN %s AND pl.state_id IN %s" + query2
+            args = (self.username, tuple(location), tuple(state))
+        elif location and vendor and not state:
+            query = query1 + "AND ne.location_id IN %s AND ne.vendor_id IN %s" + query2
+            args = (self.username, tuple(location), tuple(vendor))
+        elif location and vendor and state:
+            query = query1 + "AND ne.location_id IN %s AND ne.vendor_id IN %s AND pl.state_id IN %s" + query2
+            args = (self.username, tuple(location), tuple(vendor), tuple(state))
 
         cur.execute(query, args)
 
@@ -347,15 +359,17 @@ class Menu:
 
             return [int(el[0]) for el in cur.fetchall() if el]
 
-    def printMenu(self, ltype='', system='', platform='', location=[], vendor=[]):
+    def printMenu(self, ltype='', system='', platform='', location=[], vendor=[], state=[]):
         os.system('clear')
-        self.DBGetPlatforms(location=location, vendor=vendor)
+        self.DBGetPlatforms(location=location, vendor=vendor, state=state)
 
         text = []
         if location:
             text.append("Location: %s"%self.DBGetRegisterNameById(location, model='locations'))
         if vendor:
             text.append("Vendor: %s"%self.DBGetRegisterNameById(vendor, model='vendors'))
+        if state:
+            text.append("State: %s"%self.DBGetRegisterNameById(state, model='states'))
 
         obj = None
         if ltype:
@@ -385,52 +399,55 @@ class Menu:
         for i in range(len(keys)):
             text.append("%i. %s"%(i+1, keys[i]))
         text.append("\nGroup By:")
-        text.append("%. Location\n#. Vendor")
+        text.append("%. Location\n#. Vendor\n&. State")
         text.append("\n*. Back\n0. Quit")
         print '\n'.join(text)
 
         choice = raw_input(">>  ")
 
-        if choice not in ['*','%','#','0']+[str(i+1) for i in range(len(keys))]:
-            self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor)
+        if choice not in ['*','%','#', '&','0']+[str(i+1) for i in range(len(keys))]:
+            self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor, state=state)
         elif choice == '0':
             self.exit()
         elif choice == '%':
             filter_option = self.getInteractiveOption(message='Location:\n>> ', model='locations')
-            self.printMenu(ltype=ltype, system=system, platform=platform, location=filter_option, vendor=vendor)
+            self.printMenu(ltype=ltype, system=system, platform=platform, location=filter_option, vendor=vendor, state=state)
         elif choice == '#':
             filter_option = self.getInteractiveOption(message='Vendor:\n>> ', model='vendors')
-            self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=filter_option)
+            self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=filter_option, state=state)
+        elif choice == '&':
+            filter_option = self.getInteractiveOption(message='State:\n>> ', model='states')
+            self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor, state=filter_option)
         elif choice == '*':
             if ltype:
-                self.printMenu(ltype='', system=system, platform=platform, location=location, vendor=vendor)
+                self.printMenu(ltype='', system=system, platform=platform, location=location, vendor=vendor, state=state)
             elif system:
-                self.printMenu(ltype='', system='', platform=platform, location=location, vendor=vendor)
+                self.printMenu(ltype='', system='', platform=platform, location=location, vendor=vendor, state=state)
             elif platform:
-                self.printMenu(ltype='', system='', platform='', location=location, vendor=vendor)
+                self.printMenu(ltype='', system='', platform='', location=location, vendor=vendor, state=state)
             else:
                 self.main_menu()
         else:
-            self.choiceOption(keys[int(choice)-1], ltype=ltype, system=system, platform=platform, location=location, vendor=vendor)
+            self.choiceOption(keys[int(choice)-1], ltype=ltype, system=system, platform=platform, location=location, vendor=vendor, state=state)
         return
 
-    def choiceOption(self, option, ltype='', system='', platform='', location='', vendor=''):
+    def choiceOption(self, option, ltype='', system='', platform='', location='', vendor='', state=''):
         try:
             obj = None
             if ltype:
                 obj = dotdict(self.platforms[platform][system][ltype][option])
                 self.executeNE(obj.name, obj.ip, obj.port, obj.protocol)
-                self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor)
+                self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor, state=state)
             elif system:
-                self.printMenu(ltype=option, system=system, platform=platform, location=location, vendor=vendor)
+                self.printMenu(ltype=option, system=system, platform=platform, location=location, vendor=vendor, state=state)
             elif platform:
-                self.printMenu(ltype='', system=option, platform=platform, location=location, vendor=vendor)
+                self.printMenu(ltype='', system=option, platform=platform, location=location, vendor=vendor, state=state)
             else:
-                self.printMenu(ltype='', system='', platform=option, location=location, vendor=vendor)
+                self.printMenu(ltype='', system='', platform=option, location=location, vendor=vendor, state=state)
 
         except Exception:
             print "Err: choiceOption"
-            self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor)
+            self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor, state=state)
         return
 
     def executeNE(self, ne_name, ip, port, protocol):
