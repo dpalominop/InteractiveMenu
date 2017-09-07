@@ -399,23 +399,23 @@ class Menu:
         for i in range(len(keys)):
             text.append("%i. %s"%(i+1, keys[i]))
         text.append("\nGroup By:")
-        text.append("%. Location\n#. Vendor\n&. State")
+        text.append("l. Location\nv. Vendor\ns. State")
         text.append("\n*. Back\n0. Quit")
         print '\n'.join(text)
 
         choice = raw_input(">>  ")
 
-        if choice not in ['*','%','#', '&','0']+[str(i+1) for i in range(len(keys))]:
+        if choice not in ['*','l','v', 's','0']+[str(i+1) for i in range(len(keys))]:
             self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor, state=state)
         elif choice == '0':
             self.exit()
-        elif choice == '%':
+        elif choice == 'l':
             filter_option = self.getInteractiveOption(message='Location:\n>> ', model='locations')
             self.printMenu(ltype=ltype, system=system, platform=platform, location=filter_option, vendor=vendor, state=state)
-        elif choice == '#':
+        elif choice == 'v':
             filter_option = self.getInteractiveOption(message='Vendor:\n>> ', model='vendors')
             self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=filter_option, state=state)
-        elif choice == '&':
+        elif choice == 's':
             filter_option = self.getInteractiveOption(message='State:\n>> ', model='states')
             self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor, state=filter_option)
         elif choice == '*':
