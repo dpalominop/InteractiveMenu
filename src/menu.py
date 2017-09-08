@@ -399,7 +399,7 @@ class Menu:
 
         keys = obj.keys()
         for i in range(len(keys)):
-            text.append("\033[93m%i. %s\033[0m\n"%(i+1, keys[i]))
+            text.append("\033[93m%i. %s\033[0m"%(i+1, keys[i]))
         text.append("\033[92m\n\nGroup By:\033[0m\n")
         text.append("\033[92ml. Location\nv. Vendor\ns. State\033[0m")
         text.append("\n\033[91m*. Back\n0. Quit\033[0m")
