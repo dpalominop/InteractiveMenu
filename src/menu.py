@@ -364,13 +364,6 @@ class Menu:
         self.DBGetPlatforms(location=location, vendor=vendor, state=state)
 
         text = []
-        if location:
-            text.append("Location: %s"%self.DBGetRegisterNameById(location, model='locations'))
-        if vendor:
-            text.append("Vendor: %s"%self.DBGetRegisterNameById(vendor, model='vendors'))
-        if state:
-            text.append("State: %s"%self.DBGetRegisterNameById(state, model='states'))
-
         obj = None
         if ltype:
             text.append("Please choose the NE:\n")
@@ -395,10 +388,19 @@ class Menu:
             text.append("Please choose the platform:\n")
             obj = self.platforms
 
+        if location:
+            text.append("Location: %s"%self.DBGetRegisterNameById(location, model='locations'))
+        if vendor:
+            text.append("Vendor: %s"%self.DBGetRegisterNameById(vendor, model='vendors'))
+        if state:
+            text.append("State: %s"%self.DBGetRegisterNameById(state, model='states'))
+        if location or vendor or state:
+            text.append("")
+
         keys = obj.keys()
         for i in range(len(keys)):
             text.append("%i. %s"%(i+1, keys[i]))
-        text.append("\nGroup By:")
+        text.append("\n\nGroup By:\n")
         text.append("l. Location\nv. Vendor\ns. State")
         text.append("\n*. Back\n0. Quit")
         print '\n'.join(text)
