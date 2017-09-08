@@ -405,17 +405,17 @@ class Menu:
 
         choice = raw_input(">>  ")
 
-        if choice not in ['*','l','v', 's','0']+[str(i+1) for i in range(len(keys))]:
+        if choice not in ['*','l','v', 's','L','V', 'S','0']+[str(i+1) for i in range(len(keys))]:
             self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor, state=state)
         elif choice == '0':
             self.exit()
-        elif choice == 'l':
+        elif choice in ('l', 'L'):
             filter_option = self.getInteractiveOption(message='Location:\n>> ', model='locations')
             self.printMenu(ltype=ltype, system=system, platform=platform, location=filter_option, vendor=vendor, state=state)
-        elif choice == 'v':
+        elif choice in ('v', 'V'):
             filter_option = self.getInteractiveOption(message='Vendor:\n>> ', model='vendors')
             self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=filter_option, state=state)
-        elif choice == 's':
+        elif choice in ('s','S'):
             filter_option = self.getInteractiveOption(message='State:\n>> ', model='states')
             self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor, state=filter_option)
         elif choice == '*':
