@@ -309,11 +309,11 @@ class Menu:
         self.DBGetIntro()
 
         os.system('clear')
-        text =  ["Welcome %s,\n"%self.full_name]
-        text.append(self.intro+'\n')
-        text.append("Accept? (y)es or (n)ot")
+        text =  ["\033[93mWelcome %s,\033[0m\n"%self.full_name]
+        text.append('\033[94m'+self.intro+'\033[0m\n')
+        text.append("\033[91mAccept? (y)es or (n)ot\033[0m")
         print '\n'.join(text)
-        ans = raw_input(">>  ")
+        ans = raw_input("\033[94m>>  \033[0m")
         self.getAnswer(ans)
         return
 
@@ -340,7 +340,7 @@ class Menu:
 
     def getInteractiveOption(self, message='', model=''):
         os.system('clear')
-        uinput = raw_input(message)
+        uinput = raw_input('\033[93m'+message+'\033[0m')
         if uinput == '':
             return []
         else:
@@ -366,46 +366,46 @@ class Menu:
         text = []
         obj = None
         if ltype:
-            text.append("Please choose the NE:\n")
+            text.append("\033[94mPlease choose the NE:\033[0m\n")
             try:
                 obj = self.platforms[platform][system][ltype]
             except:
                 obj = {}
 
         elif system:
-            text.append("Please choose the Type:\n")
+            text.append("\033[94mPlease choose the Type:\033[0m\n")
             try:
                 obj = self.platforms[platform][system]
             except:
                 obj = {}
         elif platform:
-            text.append("Please choose the System:\n")
+            text.append("\033[94mPlease choose the System:\033[0m\n")
             try:
                 obj = self.platforms[platform]
             except:
                 obj = {}
         else:
-            text.append("Please choose the platform:\n")
+            text.append("\033[94mPlease choose the platform:\033[0m\n")
             obj = self.platforms
 
         if location:
-            text.append("Location: %s"%self.DBGetRegisterNameById(location, model='locations'))
+            text.append("\033[92mLocation: %s\033[0m"%self.DBGetRegisterNameById(location, model='locations'))
         if vendor:
-            text.append("Vendor: %s"%self.DBGetRegisterNameById(vendor, model='vendors'))
+            text.append("\033[92mVendor: %s\033[0m"%self.DBGetRegisterNameById(vendor, model='vendors'))
         if state:
-            text.append("State: %s"%self.DBGetRegisterNameById(state, model='states'))
+            text.append("\033[92mState: %s\033[0m"%self.DBGetRegisterNameById(state, model='states'))
         if location or vendor or state:
             text.append("")
 
         keys = obj.keys()
         for i in range(len(keys)):
-            text.append("%i. %s"%(i+1, keys[i]))
-        text.append("\n\nGroup By:\n")
-        text.append("l. Location\nv. Vendor\ns. State")
-        text.append("\n*. Back\n0. Quit")
+            text.append("\033[93m%i. %s\033[0m\n"%(i+1, keys[i]))
+        text.append("\033[92m\n\nGroup By:\033[0m\n")
+        text.append("\033[92ml. Location\nv. Vendor\ns. State\033[0m")
+        text.append("\n\033[91m*. Back\n0. Quit\033[0m")
         print '\n'.join(text)
 
-        choice = raw_input(">>  ")
+        choice = raw_input("\033[94m>>  \033[0m")
 
         if choice not in ['*','l','v', 's','L','V', 'S','0']+[str(i+1) for i in range(len(keys))]:
             self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor, state=state)
