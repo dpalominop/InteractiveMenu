@@ -495,9 +495,15 @@ class Menu:
 #      MAIN PROGRAM
 # =======================
 
+import signal
+
+def exit_gracefully(signum, frame):
+    print ''
+    sys.exit(1)
+
 # Main Program
 if __name__ == "__main__":
-
+    signal.signal(signal.SIGINT, exit_gracefully)
     username = getpass.getuser()
 
     if username == 'root':
