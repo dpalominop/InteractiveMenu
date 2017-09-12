@@ -460,9 +460,11 @@ class Menu:
         zone_time = datetime.now()
         logfile = "%s-%s-%s-%s"%(zone_time.strftime("%Y-%m-%d-%H-%M-%S"),
                                 self.username,
-                                unidecode.unidecode(ne_name),
+                                ne_name,
                                 socket.gethostname()
                                 )
+        import unidecode
+        logfile = unidecode.unidecode(unicode(logfile, 'utf-8'))
 
         ssh_log = "sshpass -p '%s' ssh %s@%s tee -a %s/%s"%(self.credential['sf_password'],
                                                               self.credential['sf_username'],
@@ -471,7 +473,7 @@ class Menu:
                                                               logfile
                                                             )
 
-        self.DBSetLogRegister(self.username, unidecode.unidecode(ne_name),
+        self.DBSetLogRegister(self.username, ne_name,
                               socket.gethostname(), zone_time,
                               logfile, timestamp)
 
