@@ -454,12 +454,13 @@ class Menu:
 
     def executeNE(self, ne_name, ip, port, protocol):
         os.system('clear')
+        import unidecode
 
         timestamp = datetime.utcnow()
         zone_time = datetime.now()
         logfile = "%s-%s-%s-%s"%(zone_time.strftime("%Y-%m-%d-%H-%M-%S"),
                                 self.username,
-                                ne_name,
+                                unidecode.unidecode(ne_name),
                                 socket.gethostname()
                                 )
 
@@ -470,7 +471,7 @@ class Menu:
                                                               logfile
                                                             )
 
-        self.DBSetLogRegister(self.username, ne_name,
+        self.DBSetLogRegister(self.username, unidecode.unidecode(ne_name),
                               socket.gethostname(), zone_time,
                               logfile, timestamp)
 
