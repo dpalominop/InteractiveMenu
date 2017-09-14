@@ -113,6 +113,26 @@ class Menu:
 
         return
 
+    def DBGetSurveillance(self):
+        try:
+            conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
+                                                                             self.credential['db_username'],
+                                                                             self.credential['db_hostname'],
+                                                                             self.credential['db_password'])
+                                    )
+        except:
+            sys.stderr.write("ERR: Unable to connect to the database\n")
+            sys.exit(0)
+
+        cur = conn.cursor()
+        cur.execute("""SELECT name FROM surveillances WHERE id=(
+                        SELECT surveillance_id FROM employees WHERE username='%s'
+                    )"""%(self.username))
+        self.surveillance = ([row[0] for row in cur.fetchall() if row] or ["None"])[0]
+        cur.close()
+
+        return
+
     def DBGetIntro(self):
         try:
             conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
@@ -306,10 +326,11 @@ class Menu:
     def main_menu(self):
         self.DBGetDirLog()
         self.DBGetUserFullName()
+        self.DBGetSurveillance()
         self.DBGetIntro()
 
         os.system('clear')
-        text =  ["\033[93mWelcome %s,\033[0m\n"%self.full_name]
+        text =  ["\033[93mBienvenido Sr(a). %s,\033[0m\n"%self.full_name]
         text.append('\033[94m'+self.intro+'\033[0m\n')
         # text.append("\033[91mAcepta? (s)í o (n)o\033[0m")
         print '\n'.join(text)
@@ -410,10 +431,10 @@ class Menu:
                 obj = {}
         else:
             text.append("""\033[94m
-                        #############################
-                        Plataformas de su Supervisión
-                        #############################
-                        \033[0m""")
+                        ###############################
+                        Plataformas de %s
+                        ###############################
+                        \033[0m"""%(self.surveillance))
             text.append("""
                         \033[94mPlatformas:\033[0m
                         """)
