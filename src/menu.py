@@ -396,6 +396,7 @@ class Menu:
                         \033[0m"""%(platform, system, ltype))
             text.append("""
                         \033[94mElementos de Red:\033[0m
+
                         """)
             try:
                 obj = self.platforms[platform][system][ltype]
@@ -411,6 +412,7 @@ class Menu:
                         \033[0m"""%(platform, system))
             text.append("""
                         \033[94mTipos:\033[0m
+
                         """)
             try:
                 obj = self.platforms[platform][system]
@@ -424,6 +426,7 @@ class Menu:
                         \033[0m"""%(platform))
             text.append("""
                         \033[94mSistemas:\033[0m
+
                         """)
             try:
                 obj = self.platforms[platform]
@@ -437,6 +440,7 @@ class Menu:
                         \033[0m"""%(self.surveillance))
             text.append("""
                         \033[94mPlatformas:\033[0m
+
                         """)
             obj = self.platforms
 
@@ -447,20 +451,19 @@ class Menu:
         if state:
             text.append("""\t\t\t\033[92mEstado: %s\033[0m"""%self.DBGetRegisterNameById(state, model='states'))
         if location or vendor or state:
-            text.append("")
+            text.append("\n")
 
         keys = obj.keys()
         for i in range(len(keys)):
-            text.append("""
-                        \033[93m[%i] %s\033[0m
-                        """%(i+1, keys[i]))
+            text.append("""\t\t\t\033[93m[%i] %s\033[0m"""%(i+1, keys[i]))
         text.append("""
+
                     \033[92m\tAgrupar por:\033[0m""")
         text.append("""\t\t\033[92m\t[u] Ubicación | [f] Fabricante | [e] Estado\033[0m
                     """)
         text.append("""
-                    \033[91m\t[v]. Volver
-                    \t[s]. Salir\033[0m
+                    \033[91m\t[v] Volver
+                    \t[s] Salir\033[0m
                     """)
         print '\n'.join(text)
 
