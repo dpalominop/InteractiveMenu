@@ -311,9 +311,9 @@ class Menu:
         os.system('clear')
         text =  ["\033[93mWelcome %s,\033[0m\n"%self.full_name]
         text.append('\033[94m'+self.intro+'\033[0m\n')
-        text.append("\033[91mAccept? (y)es or (n)ot\033[0m")
+        # text.append("\033[91mAcepta? (s)í o (n)o\033[0m")
         print '\n'.join(text)
-        ans = raw_input("\033[94m>>  \033[0m")
+        ans = raw_input("\033[91mAcepta? (s)í o (n)o:  \033[0m")
         self.getAnswer(ans)
         return
 
@@ -328,7 +328,7 @@ class Menu:
             try:
                 if ch == 'n':
                     self.exit()
-                elif ch == 'y':
+                elif ch == 's':
                     self.printMenu()
                 else:
                     self.main_menu()
@@ -339,7 +339,7 @@ class Menu:
         return
 
     def getInteractiveOption(self, message='', model=''):
-        os.system('clear')
+        # os.system('clear')
         uinput = raw_input('\033[93m'+message+'\033[0m')
         if uinput == '':
             return []
@@ -366,61 +366,99 @@ class Menu:
         text = []
         obj = None
         if ltype:
-            text.append("\033[94mPlease choose the NE:\033[0m\n")
+            text.append("""\033[94m
+                        #############################
+                        Plataforma:\t%s
+                        Sistema:\t%s
+                        Tipo:\t\t%s
+                        #############################
+                        \033[0m"""%(platform, system, ltype))
+            text.append("""
+                        \033[94mElementos de Red:\033[0m
+                        """)
             try:
                 obj = self.platforms[platform][system][ltype]
             except:
                 obj = {}
 
         elif system:
-            text.append("\033[94mPlease choose the Type:\033[0m\n")
+            text.append("""\033[94m
+                        #############################
+                        Plataforma:\t%s
+                        Sistema:\t%s
+                        #############################
+                        \033[0m"""%(platform, system))
+            text.append("""
+                        \033[94mTipos:\033[0m
+                        """)
             try:
                 obj = self.platforms[platform][system]
             except:
                 obj = {}
         elif platform:
-            text.append("\033[94mPlease choose the System:\033[0m\n")
+            text.append("""\033[94m
+                        #############################
+                        Plataforma:\t%s
+                        #############################
+                        \033[0m"""%(platform))
+            text.append("""
+                        \033[94mSistemas:\033[0m
+                        """)
             try:
                 obj = self.platforms[platform]
             except:
                 obj = {}
         else:
-            text.append("\033[94mPlease choose the platform:\033[0m\n")
+            text.append("""\033[94m
+                        #############################
+                        Plataformas de su Supervisión
+                        #############################
+                        \033[0m""")
+            text.append("""
+                        \033[94mPlatformas:\033[0m
+                        """)
             obj = self.platforms
 
         if location:
-            text.append("\033[92mLocation: %s\033[0m"%self.DBGetRegisterNameById(location, model='locations'))
+            text.append("""\t\t\t\033[92mUbicación: %s\033[0m"""%self.DBGetRegisterNameById(location, model='locations'))
         if vendor:
-            text.append("\033[92mVendor: %s\033[0m"%self.DBGetRegisterNameById(vendor, model='vendors'))
+            text.append("""\t\t\t\033[92mFabricante: %s\033[0m"""%self.DBGetRegisterNameById(vendor, model='vendors'))
         if state:
-            text.append("\033[92mState: %s\033[0m"%self.DBGetRegisterNameById(state, model='states'))
+            text.append("""\t\t\t\033[92mEstado: %s\033[0m"""%self.DBGetRegisterNameById(state, model='states'))
         if location or vendor or state:
             text.append("")
 
         keys = obj.keys()
         for i in range(len(keys)):
-            text.append("\033[93m%i. %s\033[0m"%(i+1, keys[i]))
-        text.append("\033[92m\n\nGroup By:\033[0m\n")
-        text.append("\033[92ml. Location\nv. Vendor\ns. State\033[0m")
-        text.append("\n\033[91m*. Back\n0. Quit\033[0m")
+            text.append("""
+                        \033[93m[%i] %s\033[0m
+                        """%(i+1, keys[i]))
+        text.append("""
+                    \033[92m\tAgrupar por:\033[0m""")
+        text.append("""\t\t\033[92m\t[u] Ubicación | [f] Fabricante | [e] Estado\033[0m
+                    """)
+        text.append("""
+                    \033[91m\t[v]. Volver
+                    \t[s]. Salir\033[0m
+                    """)
         print '\n'.join(text)
 
-        choice = raw_input("\033[94m>>  \033[0m")
+        choice = raw_input("""\t\t\t\033[94mIngrese la opción deseada >>  \033[0m""")
 
-        if choice not in ['*','l','v', 's','L','V', 'S','0']+[str(i+1) for i in range(len(keys))]:
+        if choice not in ['v','u','f', 'e', 's', 'V', 'U','F', 'E','S']+[str(i+1) for i in range(len(keys))]:
             self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor, state=state)
-        elif choice == '0':
+        elif choice in ('s', 'S'):
             self.exit()
-        elif choice in ('l', 'L'):
-            filter_option = self.getInteractiveOption(message='Location:\n>> ', model='locations')
+        elif choice in ('u', 'U'):
+            filter_option = self.getInteractiveOption(message='\n\t\t\tUbicación:\n\t\t\t>> ', model='locations')
             self.printMenu(ltype=ltype, system=system, platform=platform, location=filter_option, vendor=vendor, state=state)
-        elif choice in ('v', 'V'):
-            filter_option = self.getInteractiveOption(message='Vendor:\n>> ', model='vendors')
+        elif choice in ('f', 'F'):
+            filter_option = self.getInteractiveOption(message='\n\t\t\tFabricante:\n\t\t\t>> ', model='vendors')
             self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=filter_option, state=state)
-        elif choice in ('s','S'):
-            filter_option = self.getInteractiveOption(message='State:\n>> ', model='states')
+        elif choice in ('e','E'):
+            filter_option = self.getInteractiveOption(message='\n\t\t\tEstado:\n\t\t\t>> ', model='states')
             self.printMenu(ltype=ltype, system=system, platform=platform, location=location, vendor=vendor, state=filter_option)
-        elif choice == '*':
+        elif choice in ('v','V'):
             if ltype:
                 self.printMenu(ltype='', system=system, platform=platform, location=location, vendor=vendor, state=state)
             elif system:
