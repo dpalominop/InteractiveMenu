@@ -515,7 +515,7 @@ class Menu:
         return
 
     def executeNE(self, ne_name, ip, port, protocol):
-        os.system('clear')
+        # os.system('clear')
         import unidecode
 
         timestamp = datetime.utcnow()
