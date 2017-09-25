@@ -439,7 +439,7 @@ class Menu:
                         ###############################
                         \033[0m"""%(self.surveillance))
             text.append("""
-                        \033[94mPlatformas:\033[0m
+                        \033[94mPlataformas:\033[0m
 
                         """)
             obj = self.platforms
