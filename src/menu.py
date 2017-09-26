@@ -522,7 +522,7 @@ class Menu:
         zone_time = datetime.now()
         logfile = "%s-%s-%s-%s"%(zone_time.strftime("%Y-%m-%d-%H-%M-%S"),
                                 self.username,
-                                ne_name,
+                                ip,
                                 socket.gethostname()
                                 )
         import unidecode
