@@ -20,6 +20,37 @@ class dotdict(dict):
     def __getattr__(self, name):
         return self[name]
 
+def makeString(c,n):
+    return ''.join([c for i in xrange(n)])
+
+def printCredentialBlocked(name):
+    print """\033[91m
+
+
+
+
+
+
+            ##########################################################
+            #         Estimado usuario: %s#
+            #                                                        #
+            #      Lo sentimos sus credenciales de accesso           #
+            #        se encuentran actualmente bloqueadas.           #
+            #            Si considera que es un error,               #
+            # por favor comuníquese con el administrador del sistema.#
+            #                                                        #
+            #                   SOC de Red - TDP                     #
+            ##########################################################
+
+
+
+
+
+
+
+
+    \033[0m"""%(name+''.join([' ' for i in xrange(29-len(name))]))
+
 class Menu:
     """
         Creación dinámica de Menu basado en Base de Datos
@@ -107,8 +138,8 @@ class Menu:
             sys.exit(0)
 
         cur = conn.cursor()
-        cur.execute("SELECT name FROM employees WHERE username='%s'"%(self.username))
-        self.full_name = ([row[0] for row in cur.fetchall() if row] or ["Anónimo"])[0]
+        cur.execute("SELECT name, status FROM employees WHERE username='%s'"%(self.username))
+        self.full_name, self.userstatus = ([(row[0],row[1]) for row in cur.fetchall() if row] or ["Anónimo", "blocked"])[0]
         cur.close()
 
         return
@@ -326,6 +357,12 @@ class Menu:
     def main_menu(self):
         self.DBGetDirLog()
         self.DBGetUserFullName()
+
+        if self.userstatus != 'active':
+            os.system('clear')
+            printCredentialBlocked(self.full_name)
+            return
+
         self.DBGetSurveillance()
         self.DBGetIntro()
 
@@ -382,18 +419,36 @@ class Menu:
 
     def printMenu(self, ltype='', system='', platform='', location=[], vendor=[], state=[]):
         os.system('clear')
+
+        self.DBGetUserFullName()
+        if self.userstatus != 'active':
+            printCredentialBlocked(self.full_name)
+            sys.exit(0)
+
         self.DBGetPlatforms(location=location, vendor=vendor, state=state)
 
         text = []
         obj = None
         if ltype:
+            my_string = ''.join(['#' for i in xrange(max(len(platform.decode('utf-8')),
+                                                         len(system.decode('utf-8')),
+                                                         len(ltype.decode('utf-8'))
+                                                         )
+                                                     )
+                                 ])
             text.append("""\033[94m
-                        ####################################
-                        Plataforma:\t%s
-                        Sistema:\t%s
-                        Tipo:\t\t%s
-                        ####################################
-                        \033[0m"""%(platform, system, ltype))
+                        ##############%s
+                        Plataforma:   %s
+                        Sistema:      %s
+                        Tipo:         %s
+                        ##############%s
+                        \033[0m"""%(my_string,
+                                    platform,
+                                    system,
+                                    ltype,
+                                    my_string
+                                    )
+                        )
             text.append("""
                         \033[94mElementos de Red:\033[0m
 
@@ -404,12 +459,22 @@ class Menu:
                 obj = {}
 
         elif system:
+            my_string = ''.join(['#' for i in xrange(max(len(platform.decode('utf-8')),
+                                                         len(system.decode('utf-8'))
+                                                         )
+                                                     )
+                                 ])
             text.append("""\033[94m
-                        ####################################
-                        Plataforma:\t%s
-                        Sistema:\t%s
-                        ####################################
-                        \033[0m"""%(platform, system))
+                        ##############%s
+                        Plataforma:   %s
+                        Sistema:      %s
+                        ##############%s
+                        \033[0m"""%(my_string,
+                                    platform,
+                                    system,
+                                    my_string
+                                    )
+                        )
             text.append("""
                         \033[94mTipos:\033[0m
 
@@ -419,11 +484,16 @@ class Menu:
             except:
                 obj = {}
         elif platform:
+            my_string = ''.join(['#' for i in xrange(len(platform.decode('utf-8')))])
             text.append("""\033[94m
-                        ####################################
-                        Plataforma:\t%s
-                        ####################################
-                        \033[0m"""%(platform))
+                        ##############%s
+                        Plataforma:   %s
+                        ##############%s
+                        \033[0m"""%(my_string,
+                                    platform,
+                                    my_string
+                                    )
+                        )
             text.append("""
                         \033[94mSistemas:\033[0m
 
@@ -433,11 +503,16 @@ class Menu:
             except:
                 obj = {}
         else:
+            my_string = ''.join(['#' for i in xrange(len(self.surveillance.decode('utf-8')))])
             text.append("""\033[94m
-                        ######################################
+                        ###############%s
                         Plataformas de %s
-                        ######################################
-                        \033[0m"""%(self.surveillance))
+                        ###############%s
+                        \033[0m"""%(my_string,
+                                    self.surveillance,
+                                    my_string
+                                    )
+                        )
             text.append("""
                         \033[94mPlataformas:\033[0m
 
@@ -515,7 +590,12 @@ class Menu:
         return
 
     def executeNE(self, ne_name, ip, port, protocol):
-        # os.system('clear')
+        self.DBGetUserFullName()
+        if self.userstatus != 'active':
+            os.system('clear')
+            printCredentialBlocked(self.full_name)
+            sys.exit(0)
+
         import unidecode
 
         timestamp = datetime.utcnow()
