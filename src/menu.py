@@ -139,7 +139,7 @@ class Menu:
 
         cur = conn.cursor()
         cur.execute("SELECT name, status FROM employees WHERE username='%s'"%(self.username))
-        self.full_name, self.userstatus = ([(row[0],row[1]) for row in cur.fetchall() if row] or ["Anónimo", "blocked"])[0]
+        self.full_name, self.userstatus = ([(row[0],row[1]) for row in cur.fetchall() if row] or [("Anónimo", "blocked")])[0]
         cur.close()
 
         return
