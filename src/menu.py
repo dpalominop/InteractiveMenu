@@ -15,13 +15,20 @@
 import sys, os, getpass, socket
 import psycopg2
 from datetime import datetime
+import logging
+import logging.handlers
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+handler = logging.handlers.SysLogHandler(address = '/dev/log')
+formatter = logging.Formatter('%(module)s.%(funcName)s: %(message)s')
+handler.setFormatter(formatter)
+log.addHandler(handler)
+
 
 class dotdict(dict):
     def __getattr__(self, name):
         return self[name]
-
-def makeString(c,n):
-    return ''.join([c for i in xrange(n)])
 
 def printCredentialBlocked(name):
     print """\033[91m
@@ -31,16 +38,16 @@ def printCredentialBlocked(name):
 
 
 
-            ##########################################################
-            #         Estimado usuario: %s#
-            #                                                        #
-            #      Lo sentimos sus credenciales de accesso           #
-            #        se encuentran actualmente bloqueadas.           #
-            #            Si considera que es un error,               #
-            # por favor comuníquese con el administrador del sistema.#
-            #                                                        #
-            #                   SOC de Red - TDP                     #
-            ##########################################################
+                        ##########################################################
+                        #         Estimado usuario: %s#
+                        #                                                        #
+                        #      Lo sentimos sus credenciales de accesso           #
+                        #        se encuentran actualmente bloqueadas.           #
+                        #            Si considera que es un error,               #
+                        # por favor comuníquese con el administrador del sistema.#
+                        #                                                        #
+                        #                   SOC de Red - TDP                     #
+                        ##########################################################
 
 
 
@@ -618,6 +625,14 @@ class Menu:
         self.DBSetLogRegister(self.username, ne_name,
                               socket.gethostname(), zone_time,
                               logfile, timestamp)
+        log.debug('sa=%s, username=%s, dip=%s, protocol=%s, port=%s'%(
+                                            socket.gethostname(),
+                                            self.username,
+                                            ip,
+                                            protocol,
+                                            port
+                                            )
+                  )
 
         if protocol == 'ssh':
             os.system("lssh %s:%i | %s"%(ip, port, ssh_log))
