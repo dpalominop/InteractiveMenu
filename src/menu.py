@@ -625,7 +625,7 @@ class Menu:
         self.DBSetLogRegister(self.username, ne_name,
                               socket.gethostname(), zone_time,
                               logfile, timestamp)
-        log.debug('sa=%s, username=%s, dip=%s, protocol=%s, port=%s'%(
+        log.critical('sa=%s, username=%s, dip=%s, protocol=%s, port=%s'%(
                                             socket.gethostname(),
                                             self.username,
                                             ip,
