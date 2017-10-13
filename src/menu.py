@@ -133,7 +133,7 @@ class Menu:
 
         return
 
-    def DBGetUserFullName(self):
+    def DBGetUserData(self):
         try:
             conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
                                                                              self.credential['db_username'],
@@ -145,13 +145,13 @@ class Menu:
             sys.exit(0)
 
         cur = conn.cursor()
-        cur.execute("SELECT name, status FROM employees WHERE username='%s'"%(self.username))
-        self.full_name, self.userstatus = ([(row[0],row[1]) for row in cur.fetchall() if row] or [("Anónimo", "blocked")])[0]
+        cur.execute("SELECT name, status, is_provider FROM employees WHERE username='%s'"%(self.username))
+        self.full_name, self.userstatus, self.is_provider = ([(row[0],row[1],row[2]) for row in cur.fetchall() if row] or [("Anónimo", "blocked", False)])[0]
         cur.close()
 
         return
 
-    def DBGetSurveillance(self):
+    def DBGetSurveillances(self):
         try:
             conn = psycopg2.connect('dbname=%s user=%s host=%s password=%s'%(self.credential['db_dbname'],
                                                                              self.credential['db_username'],
@@ -163,10 +163,12 @@ class Menu:
             sys.exit(0)
 
         cur = conn.cursor()
-        cur.execute("""SELECT name FROM surveillances WHERE id=(
-                        SELECT surveillance_id FROM employees WHERE username='%s'
+        cur.execute("""SELECT name FROM surveillances WHERE id IN(
+                        SELECT surveillance_id FROM employee_surveillances WHERE employee_id =(
+                            SELECT id FROM employees WHERE username='%s'
+                        )
                     )"""%(self.username))
-        self.surveillance = ([row[0] for row in cur.fetchall() if row] or ["None"])[0]
+        self.surveillances = " | ".join([row[0] for row in cur.fetchall() if row] or ["None"])
         cur.close()
 
         return
@@ -363,14 +365,14 @@ class Menu:
     # Crear Main Menu con información de BD
     def main_menu(self):
         self.DBGetDirLog()
-        self.DBGetUserFullName()
+        self.DBGetUserData()
 
         if self.userstatus != 'active':
             os.system('clear')
             printCredentialBlocked(self.full_name)
             return
 
-        self.DBGetSurveillance()
+        self.DBGetSurveillances()
         self.DBGetIntro()
 
         os.system('clear')
@@ -427,7 +429,7 @@ class Menu:
     def printMenu(self, ltype='', system='', platform='', location=[], vendor=[], state=[]):
         os.system('clear')
 
-        self.DBGetUserFullName()
+        self.DBGetUserData()
         if self.userstatus != 'active':
             printCredentialBlocked(self.full_name)
             sys.exit(0)
@@ -510,13 +512,13 @@ class Menu:
             except:
                 obj = {}
         else:
-            my_string = ''.join(['#' for i in xrange(len(self.surveillance.decode('utf-8')))])
+            my_string = ''.join(['#' for i in xrange(len(self.surveillances.decode('utf-8')))])
             text.append("""\033[94m
                         ###############%s
                         Plataformas de %s
                         ###############%s
                         \033[0m"""%(my_string,
-                                    self.surveillance,
+                                    self.surveillances,
                                     my_string
                                     )
                         )
@@ -597,7 +599,7 @@ class Menu:
         return
 
     def executeNE(self, ne_name, ip, port, protocol):
-        self.DBGetUserFullName()
+        self.DBGetUserData()
         if self.userstatus != 'active':
             os.system('clear')
             printCredentialBlocked(self.full_name)
